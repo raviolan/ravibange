@@ -20,6 +20,7 @@ const state = {
 };
 
 const CACHE_KEY = "ravibange_spreadsheet_cache_v1";
+const INGREDIENT_CHECKS_CACHE_PREFIX = "ravibange_ingredient_checks_v1";
 
 function loadSheet(sheetName, query = "select A,B,C,D,E,F") {
   return new Promise((resolve, reject) => {
@@ -80,6 +81,10 @@ function canonicalAvdelning(value) {
   return String(value).trim();
 }
 
+function sectionRankKey(value) {
+  return normalizeText(canonicalAvdelning(value));
+}
+
 function displayTag(value) {
   return canonicalAvdelning(value);
 }
@@ -106,6 +111,33 @@ function loadCache() {
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
+  }
+}
+
+function ingredientChecksCacheKey(listType) {
+  return `${INGREDIENT_CHECKS_CACHE_PREFIX}:${currentRecipeSlug()}:${listType}`;
+}
+
+function loadCheckedIngredientKeys(storageKey) {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCheckedIngredientKeys(storageKey, checkedKeys) {
+  try {
+    if (checkedKeys.size) {
+      localStorage.setItem(storageKey, JSON.stringify([...checkedKeys]));
+      return;
+    }
+
+    localStorage.removeItem(storageKey);
+  } catch {
+    // Ignore storage failures; checkboxes still work for the current page view.
   }
 }
 
@@ -223,7 +255,7 @@ function parseButikSheet(rows) {
   }
 
   for (const row of rows.slice(1)) {
-    const section = canonicalAvdelning(row[0]);
+    const section = sectionRankKey(row[0]);
     if (!section) continue;
 
     for (const store of groceryStores) {
@@ -243,7 +275,7 @@ function currentRecipeSlug() {
 }
 
 function rankForStore(row, store) {
-  const section = normalizeText(row.dataset.section);
+  const section = sectionRankKey(row.dataset.section);
   const rankMap = state.storeRanks[store];
   if (!rankMap || !section) return Number.POSITIVE_INFINITY;
   return rankMap[section] ?? Number.POSITIVE_INFINITY;
@@ -261,25 +293,29 @@ function syncStapleVisibility() {
   });
 }
 
-function sortedRowsInList(list) {
-  const store = document.querySelector("[name='grocery-store']")?.value || "";
-
+function sortedIngredientRows(list, store, { includeHidden = true } = {}) {
   return [...list.querySelectorAll(".ingredient-row")]
-    .filter((row) => !row.hidden)
+    .filter((row) => includeHidden || !row.hidden)
     .map((row, index) => ({ row, index, rank: rankForStore(row, store) }))
     .sort((a, b) => a.rank - b.rank || a.index - b.index)
     .map(({ row }) => row);
 }
 
+function sortedRowsInList(list) {
+  const store = document.querySelector("[name='grocery-store']")?.value || "";
+  return sortedIngredientRows(list, store, { includeHidden: false });
+}
+
 function sortVisibleIngredients(store) {
   document.querySelectorAll(".ingredient-items").forEach((list) => {
-    const sorted = [...list.querySelectorAll(".ingredient-row")]
-      .map((row, index) => ({ row, index, rank: rankForStore(row, store) }))
-      .sort((a, b) => a.rank - b.rank || a.index - b.index)
-      .map(({ row }) => row);
-
-    sorted.forEach((row) => list.append(row));
+    sortedIngredientRows(list, store).forEach((row) => list.append(row));
   });
+}
+
+function refreshVisibleIngredientOrder() {
+  const store = document.querySelector("[name='grocery-store']")?.value || "";
+  syncStapleVisibility();
+  sortVisibleIngredients(store);
 }
 
 function metaEntry(label, value) {
@@ -292,15 +328,28 @@ function metaEntry(label, value) {
   return fragment;
 }
 
-function renderIngredientList(ingredients) {
+function renderIngredientList(ingredients, storageKey) {
   const ul = document.createElement("ul");
   ul.className = "ingredients-list ingredient-items";
+  const checkedKeys = loadCheckedIngredientKeys(storageKey);
 
   ingredients.forEach((ingredient) => {
+    const checkKey = rowKey(ingredient);
     const row = document.createElement("li");
     row.className = "ingredient-row";
     row.dataset.notes = ingredient.notes;
     row.dataset.section = ingredient.section;
+    row.dataset.checkKey = checkKey;
+
+    const rowHeader = document.createElement("div");
+    rowHeader.className = "ingredient-row-header";
+
+    const checkbox = document.createElement("input");
+    checkbox.className = "ingredient-check";
+    checkbox.type = "checkbox";
+    checkbox.checked = checkedKeys.has(checkKey);
+    checkbox.setAttribute("aria-label", `Markera ${ingredient.name} som handlad`);
+    row.classList.toggle("is-checked", checkbox.checked);
 
     const toggle = document.createElement("button");
     toggle.className = "ingredient-toggle";
@@ -313,7 +362,7 @@ function renderIngredientList(ingredients) {
     meta.hidden = true;
 
     if (ingredient.hint) {
-      meta.append(metaEntry("Hint", ingredient.hint));
+      meta.append(metaEntry("Hint:", ingredient.hint));
     }
 
     if (ingredient.section) {
@@ -330,7 +379,18 @@ function renderIngredientList(ingredients) {
       meta.hidden = open;
     });
 
-    row.append(toggle, meta);
+    checkbox.addEventListener("change", () => {
+      row.classList.toggle("is-checked", checkbox.checked);
+      if (checkbox.checked) {
+        checkedKeys.add(checkKey);
+      } else {
+        checkedKeys.delete(checkKey);
+      }
+      saveCheckedIngredientKeys(storageKey, checkedKeys);
+    });
+
+    rowHeader.append(checkbox, toggle);
+    row.append(rowHeader, meta);
     ul.append(row);
   });
 
@@ -378,12 +438,10 @@ function addStoreControls(detail, anchor) {
   detail.insertBefore(staplesField, anchor);
   detail.insertBefore(field, staplesField);
 
-  field.querySelector("select").addEventListener("change", (event) => {
-    sortVisibleIngredients(event.target.value);
-  });
+  field.querySelector("select").addEventListener("change", refreshVisibleIngredientOrder);
 
   staplesField.querySelector("input").addEventListener("change", () => {
-    syncStapleVisibility();
+    refreshVisibleIngredientOrder();
   });
 }
 
@@ -420,14 +478,65 @@ function addCopyButton(wrapper) {
   });
 }
 
-function wrapIngredientList(placeholder, renderedList) {
+function addClearChecksControl(wrapper) {
+  const clearButton = document.createElement("button");
+  clearButton.className = "clear-ingredient-checks";
+  clearButton.type = "button";
+  clearButton.textContent = "ta bort alla icheckningar";
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "clear-checks-dialog";
+  dialog.innerHTML = `
+    <form method="dialog">
+      <p>är du säker på att du vill ta bort alla icheckningar?? haru handlat klart osv??</p>
+      <div class="clear-checks-actions">
+        <button class="clear-checks-confirm" value="confirm">JA TA BORT</button>
+        <button class="clear-checks-cancel" value="cancel">NEJ FÖR FAN AVBRYT!!!</button>
+      </div>
+    </form>
+  `;
+
+  clearButton.addEventListener("click", () => {
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+      return;
+    }
+
+    if (window.confirm("är du säker på att du vill ta bort alla icheckningar?? haru handlat klart osv??")) {
+      clearIngredientChecks(wrapper);
+    }
+  });
+
+  dialog.addEventListener("close", () => {
+    if (dialog.returnValue === "confirm") {
+      clearIngredientChecks(wrapper);
+    }
+  });
+
+  wrapper.append(clearButton, dialog);
+}
+
+function clearIngredientChecks(wrapper) {
+  const storageKey = wrapper.dataset.checksStorageKey;
+  wrapper.querySelectorAll(".ingredient-check:checked").forEach((checkbox) => {
+    checkbox.checked = false;
+    checkbox.closest(".ingredient-row")?.classList.remove("is-checked");
+  });
+  if (storageKey) {
+    saveCheckedIngredientKeys(storageKey, new Set());
+  }
+}
+
+function wrapIngredientList(placeholder, renderedList, storageKey) {
   const wrapper = document.createElement("div");
   wrapper.className = "ingredients-wrap";
+  wrapper.dataset.checksStorageKey = storageKey;
 
   placeholder.parentNode.insertBefore(wrapper, placeholder);
   placeholder.remove();
   wrapper.appendChild(renderedList);
   addCopyButton(wrapper);
+  addClearChecksControl(wrapper);
 }
 
 async function bootstrap() {
@@ -481,20 +590,14 @@ function renderCurrentRecipePage(source = "live") {
     const items = isMajsrora
       ? state.majsroraItems
       : state.recipeMap.get(currentRecipeSlug()) || [];
+    const listType = isMajsrora ? MAJSRORA_SLUG : "main";
+    const storageKey = ingredientChecksCacheKey(listType);
 
-    const renderedList = renderIngredientList(items);
-    wrapIngredientList(list, renderedList);
+    const renderedList = renderIngredientList(items, storageKey);
+    wrapIngredientList(list, renderedList, storageKey);
   });
 
-  const storeSelect = document.querySelector("[name='grocery-store']");
-  if (storeSelect) {
-    storeSelect.addEventListener("change", (event) => {
-      sortVisibleIngredients(event.target.value);
-    });
-  }
-
-  syncStapleVisibility();
-  sortVisibleIngredients(storeSelect?.value || "");
+  refreshVisibleIngredientOrder();
 
   if (source === "cache") {
     const note = document.createElement("p");

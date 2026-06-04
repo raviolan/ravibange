@@ -799,7 +799,7 @@ body {
   width: min(100%, 560px);
   margin-top: 14px;
   padding: 18px 20px;
-  padding-right: 58px;
+  padding-right: 50px;
   overflow-x: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -824,8 +824,24 @@ body {
   border-bottom: 0;
 }
 
+.ingredient-row-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ingredient-check {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 16px 0 0;
+  accent-color: var(--yellow);
+  cursor: pointer;
+}
+
 .ingredient-toggle {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 11px 0;
   border: 0;
   background: transparent;
@@ -848,11 +864,17 @@ body {
   content: "-";
 }
 
+.ingredient-row.is-checked .ingredient-name {
+  text-decoration: line-through;
+  text-decoration-thickness: .08em;
+  text-decoration-color: var(--yellow);
+  opacity: .64;
+}
+
 .ingredient-meta {
   display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 4px 12px;
-  margin: 0 0 12px;
+  gap: 2px;
+  margin: 2px 0 14px 30px;
   color: var(--blue);
   font-size: clamp(18px, 4.8vw, 24px);
   line-height: 1.1;
@@ -864,6 +886,10 @@ body {
 
 .ingredient-meta dt {
   font-weight: 700;
+}
+
+.ingredient-meta dt:not(:first-child) {
+  margin-top: 10px;
 }
 
 .ingredient-meta dd {
@@ -881,34 +907,35 @@ body {
 
 .copy-ingredients {
   position: absolute;
-  top: 28px;
-  right: 10px;
-  width: 34px;
-  height: 34px;
+  top: 24px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border: 2px solid var(--blue);
-  background: var(--yellow);
-  border-radius: 4px;
+  border: 1px solid rgb(52 73 116 / .68);
+  background: rgb(246 245 215 / .22);
+  border-radius: 3px;
   cursor: pointer;
+  opacity: .68;
 }
 
 .copy-ingredients::before,
 .copy-ingredients::after {
   content: "";
   position: absolute;
-  width: 13px;
-  height: 16px;
-  border: 2px solid var(--blue);
-  background: var(--yellow);
+  width: 9px;
+  height: 12px;
+  border: 1px solid var(--blue);
+  background: var(--sky);
 }
 
 .copy-ingredients::before {
-  left: 8px;
-  top: 10px;
+  left: 7px;
+  top: 9px;
 }
 
 .copy-ingredients::after {
-  left: 12px;
+  left: 10px;
   top: 6px;
 }
 
@@ -916,6 +943,7 @@ body {
 .copy-ingredients:focus-visible,
 .copy-ingredients.copied {
   background: var(--cream);
+  opacity: 1;
 }
 
 .copy-ingredients:hover::before,
@@ -925,6 +953,69 @@ body {
 .copy-ingredients.copied::before,
 .copy-ingredients.copied::after {
   background: var(--cream);
+}
+
+.clear-ingredient-checks {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 10px 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid rgb(52 73 116 / .72);
+  background: rgb(246 245 215 / .14);
+  color: var(--blue);
+  cursor: pointer;
+  font: 700 clamp(14px, 3.8vw, 18px) "Podkova", Georgia, serif;
+  text-transform: uppercase;
+}
+
+.clear-ingredient-checks:hover,
+.clear-ingredient-checks:focus-visible {
+  background: var(--cream);
+}
+
+.clear-checks-dialog {
+  max-width: min(92vw, 520px);
+  padding: 20px;
+  border: 3px solid var(--blue);
+  background: var(--cream);
+  color: var(--blue);
+  font-family: "Podkova", Georgia, serif;
+}
+
+.clear-checks-dialog::backdrop {
+  background: rgb(52 73 116 / .46);
+}
+
+.recipe-detail section .clear-checks-dialog p {
+  margin: 0 0 18px;
+  color: var(--blue);
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.clear-checks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.clear-checks-actions button {
+  padding: 8px 12px;
+  border: 2px solid var(--blue);
+  color: var(--blue);
+  cursor: pointer;
+  font: 700 clamp(16px, 4vw, 20px) "Podkova", Georgia, serif;
+  text-transform: uppercase;
+}
+
+.clear-checks-confirm {
+  background: var(--yellow);
+}
+
+.clear-checks-cancel {
+  background: var(--sky);
 }
 
 .servings {

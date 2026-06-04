@@ -19,7 +19,7 @@ const state = {
 
 const CACHE_KEY = "ravibange_spreadsheet_cache_v1";
 
-function loadSheet(sheetName, query = "select A,B,C,D,E") {
+function loadSheet(sheetName, query = "select A,B,C,D,E,F") {
   return new Promise((resolve, reject) => {
     const callbackName = `__sheet_${sheetName}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const script = document.createElement("script");
@@ -308,11 +308,11 @@ function renderIngredientList(ingredients) {
     }
 
     if (ingredient.section) {
-      meta.append(metaEntry("Avdelning", ingredient.section));
+      meta.append(metaEntry("Avdelning:", ingredient.section));
     }
 
     if (ingredient.alternativ) {
-      meta.append(metaEntry("Alternativ", ingredient.alternativ));
+      meta.append(metaEntry("Alternativ:", ingredient.alternativ));
     }
 
     toggle.addEventListener("click", () => {

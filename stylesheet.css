@@ -626,6 +626,71 @@ body {
   font: 700 clamp(20px, 5vw, 28px) "Podkova", Georgia, serif;
 }
 
+.staples-toggle-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: 100%;
+  margin: calc(-18px + 1vw) 0 clamp(24px, 7vw, 42px);
+  color: var(--blue);
+  cursor: pointer;
+  font: 700 clamp(18px, 5vw, 26px) "Podkova", Georgia, serif;
+  text-transform: uppercase;
+}
+
+.staples-toggle-field input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.staples-toggle-ui {
+  position: relative;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 32px;
+  border: 2px solid var(--blue);
+  background: var(--cream);
+}
+
+.staples-toggle-ui::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  background: var(--blue);
+  transition: transform .15s ease;
+}
+
+.staples-toggle-field input:checked + .staples-toggle-ui::after {
+  transform: translateX(26px);
+}
+
+.staples-toggle-field input:focus-visible + .staples-toggle-ui {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+.staples-toggle-copy {
+  display: grid;
+}
+
+.staples-show {
+  display: none;
+}
+
+.staples-toggle-field input:checked ~ .staples-toggle-copy .staples-show {
+  display: inline;
+}
+
+.staples-toggle-field input:checked ~ .staples-toggle-copy .staples-hide {
+  display: none;
+}
+
 .recipe-detail section p,
 .servings,
 .ingredients-list {

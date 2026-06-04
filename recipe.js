@@ -291,11 +291,23 @@ function rankForStore(row, store) {
   return storeDepartmentRanks[store][section] ?? Number.POSITIVE_INFINITY;
 }
 
+function shouldShowStaples() {
+  return document.querySelector("[name='staples-visibility']")?.checked ?? false;
+}
+
+function syncStapleVisibility() {
+  const showStaples = shouldShowStaples();
+
+  document.querySelectorAll(".ingredient-row").forEach((row) => {
+    row.hidden = row.dataset.notes === "staple" && !showStaples;
+  });
+}
+
 function sortedShoppingRows(wrapper) {
   const store = document.querySelector("[name='grocery-store']")?.value || "";
 
   return [...wrapper.querySelectorAll(".ingredient-row")]
-    .filter((row) => row.dataset.notes === "handla")
+    .filter((row) => !row.hidden)
     .map((row, index) => ({ row, index, rank: rankForStore(row, store) }))
     .sort((a, b) => a.rank - b.rank || a.index - b.index)
     .map(({ row }) => row);
@@ -396,10 +408,27 @@ document.querySelectorAll(".recipe-detail").forEach((detail) => {
   `;
 
   detail.insertBefore(field, ingredientsSection);
+
+  const staplesField = document.createElement("label");
+  staplesField.className = "staples-toggle-field";
+  staplesField.innerHTML = `
+    <input type="checkbox" name="staples-visibility">
+    <span class="staples-toggle-ui" aria-hidden="true"></span>
+    <span class="staples-toggle-copy">
+      <span class="staples-show">Dölj stapelvaror</span>
+      <span class="staples-hide">Visa stapelvaror</span>
+    </span>
+  `;
+
+  detail.insertBefore(staplesField, ingredientsSection);
   addMajsroraBox(detail);
 
   field.querySelector("select").addEventListener("change", (event) => {
     sortVisibleIngredients(event.target.value);
+  });
+
+  staplesField.querySelector("input").addEventListener("change", () => {
+    syncStapleVisibility();
   });
 });
 
@@ -425,8 +454,8 @@ document.querySelectorAll(".ingredients-list").forEach((list) => {
     const originalLabel = button.getAttribute("aria-label");
     const shoppingItems = sortedShoppingRows(wrapper)
       .map((row) => row.querySelector(".ingredient-name").textContent.trim());
-    const fallback = activeList.textContent.trim();
-    const copyText = (shoppingItems.length ? shoppingItems.join("\n") : fallback);
+  const fallback = activeList.textContent.trim();
+  const copyText = (shoppingItems.length ? shoppingItems.join("\n") : fallback);
 
     try {
       await navigator.clipboard.writeText(copyText);
@@ -445,3 +474,5 @@ document.querySelectorAll(".ingredients-list").forEach((list) => {
     }
   });
 });
+
+syncStapleVisibility();

@@ -590,6 +590,42 @@ body {
   max-width: 620px;
 }
 
+.sub-recipe-section {
+  margin-top: clamp(28px, 8vw, 48px);
+}
+
+.sub-recipe-section h2 {
+  max-width: 9ch;
+  color: var(--yellow);
+}
+
+.store-select-field {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 560px);
+  margin: 0 0 clamp(24px, 7vw, 42px);
+  color: var(--blue);
+  font-family: "Passion One", Impact, sans-serif;
+  font-size: clamp(34px, 9vw, 54px);
+  line-height: .9;
+  text-transform: uppercase;
+}
+
+.store-select-field select {
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 44px 10px 14px;
+  border: 2px solid var(--blue);
+  border-radius: 0;
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--blue) 50%) right 18px center / 9px 9px no-repeat,
+    linear-gradient(135deg, var(--blue) 50%, transparent 50%) right 10px center / 9px 9px no-repeat,
+    var(--cream);
+  color: var(--blue);
+  font: 700 clamp(20px, 5vw, 28px) "Podkova", Georgia, serif;
+}
+
 .recipe-detail section p,
 .servings,
 .ingredients-list {
@@ -611,6 +647,67 @@ body {
   border: 2px solid var(--blue);
   color: var(--cream);
   font-family: "Podkova", Georgia, serif;
+}
+
+.ingredient-items {
+  display: grid;
+  gap: 0;
+  list-style: none;
+  white-space: normal;
+}
+
+.ingredient-row {
+  border-bottom: 1px solid rgb(52 73 116 / .55);
+}
+
+.ingredient-row:last-child {
+  border-bottom: 0;
+}
+
+.ingredient-toggle {
+  width: 100%;
+  padding: 11px 0;
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+  cursor: pointer;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+}
+
+.ingredient-toggle::after {
+  content: "+";
+  float: right;
+  margin-left: 14px;
+  color: var(--yellow);
+  font-weight: 700;
+}
+
+.ingredient-toggle[aria-expanded="true"]::after {
+  content: "-";
+}
+
+.ingredient-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0 0 12px;
+  color: var(--blue);
+  font-size: clamp(18px, 4.8vw, 24px);
+  line-height: 1.1;
+}
+
+.ingredient-meta[hidden] {
+  display: none;
+}
+
+.ingredient-meta dt {
+  font-weight: 700;
+}
+
+.ingredient-meta dd {
+  margin: 0;
 }
 
 .ingredients-wrap {

@@ -722,10 +722,11 @@ body {
 }
 
 .staples-toggle-field {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 12px;
-  width: max-content;
+  width: min(100%, 560px);
   max-width: 100%;
   margin: calc(-18px + 1vw) 0 clamp(24px, 7vw, 42px);
   color: var(--blue);
@@ -761,29 +762,32 @@ body {
   transition: transform .15s ease;
 }
 
-.staples-toggle-field input:checked + .staples-toggle-ui::after {
+.staples-toggle-field input:checked ~ .staples-toggle-ui::after {
   transform: translateX(26px);
 }
 
-.staples-toggle-field input:focus-visible + .staples-toggle-ui {
+.staples-toggle-field input:focus-visible ~ .staples-toggle-ui {
   outline: 3px solid var(--yellow);
   outline-offset: 3px;
 }
 
-.staples-toggle-copy {
-  display: grid;
+.staples-option {
+  opacity: .48;
+  line-height: 1;
 }
 
-.staples-show {
-  display: none;
+.staples-option-show {
+  text-align: right;
 }
 
-.staples-toggle-field input:checked ~ .staples-toggle-copy .staples-show {
-  display: inline;
+.staples-option-hide {
+  text-align: left;
 }
 
-.staples-toggle-field input:checked ~ .staples-toggle-copy .staples-hide {
-  display: none;
+.staples-toggle-field input:not(:checked) ~ .staples-option-show,
+.staples-toggle-field input:checked ~ .staples-option-hide {
+  opacity: 1;
+  color: var(--blue);
 }
 
 .recipe-detail section p,

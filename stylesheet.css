@@ -1,0 +1,490 @@
+:root {
+  --cream: #f6f5d7;
+  --blue: #344974;
+  --red: #df4443;
+  --yellow: #fbc668;
+  --sky: #52abd7;
+  --poster-w: min(100vw, 794px);
+  --scale: calc(var(--poster-w) / 794);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--cream);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  display: grid;
+  place-items: start center;
+  background: var(--cream);
+  color: var(--blue);
+}
+
+.poster {
+  position: relative;
+  width: var(--poster-w);
+  aspect-ratio: 21 / 29.7;
+  overflow: hidden;
+  background: var(--cream);
+  font-family: "Podkova", Georgia, serif;
+  isolation: isolate;
+}
+
+.display {
+  margin: 0;
+  font-family: "Passion One", Impact, sans-serif;
+  font-weight: 400;
+  line-height: .86;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.vampiro {
+  margin: 0;
+  font-family: "Vampiro One", system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.pod {
+  margin: 0;
+  font-family: "Podkova", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.checkers {
+  position: absolute;
+  left: -2%;
+  top: 0;
+  width: 104%;
+  height: 11.6%;
+  background:
+    conic-gradient(var(--yellow) 25%, transparent 0 50%, var(--yellow) 0 75%, transparent 0)
+    0 0 / calc(21 * var(--scale)) calc(21 * var(--scale));
+}
+
+.sign {
+  position: absolute;
+  left: 24.9%;
+  top: 3.24%;
+  width: 50.2%;
+  height: auto;
+}
+
+.welcome {
+  position: absolute;
+  left: 42.6%;
+  top: 5.48%;
+  width: 14.8%;
+  color: var(--cream);
+  font-size: calc(16 * var(--scale));
+  text-align: center;
+}
+
+.brand {
+  position: absolute;
+  left: 27.7%;
+  top: 6.89%;
+  width: 44.5%;
+  color: var(--yellow);
+  font-size: calc(81 * var(--scale));
+  text-align: center;
+  -webkit-text-stroke: calc(.7 * var(--scale)) var(--blue);
+  text-shadow: calc(1.4 * var(--scale)) calc(1.4 * var(--scale)) 0 var(--blue);
+}
+
+.kitchen {
+  position: absolute;
+  left: 26.8%;
+  top: 13.65%;
+  width: 46.4%;
+  color: var(--cream);
+  font-size: calc(35 * var(--scale));
+  text-align: center;
+}
+
+.sometimes {
+  position: absolute;
+  left: 1.55%;
+  top: 11.6%;
+  width: 22%;
+  color: var(--sky);
+  font-size: calc(46 * var(--scale));
+  text-align: center;
+  -webkit-text-stroke: calc(.6 * var(--scale)) var(--blue);
+}
+
+.easy {
+  position: absolute;
+  left: 3%;
+  top: 21.65%;
+  width: 44.8%;
+  color: var(--yellow);
+  font-size: calc(31 * var(--scale));
+  text-align: center;
+  z-index: 2;
+}
+
+.best {
+  position: absolute;
+  left: 75.8%;
+  top: 4.65%;
+  width: 17.3%;
+  color: var(--blue);
+  font-size: calc(32 * var(--scale));
+  text-align: center;
+  transform: rotate(-14deg);
+}
+
+.plate {
+  position: absolute;
+  left: 52.2%;
+  top: 19.94%;
+  width: 19.3%;
+}
+
+.panel {
+  position: absolute;
+  background: var(--sky);
+  border: calc(2 * var(--scale)) solid var(--blue);
+}
+
+.left-panel {
+  left: 3%;
+  top: 23.1%;
+  width: 44.8%;
+  height: 54.3%;
+}
+
+.special-panel {
+  left: 51.2%;
+  top: 66.7%;
+  width: 43.6%;
+  height: 30.9%;
+  background: transparent;
+  border: 0;
+}
+
+.special-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--sky);
+  border: calc(2 * var(--scale)) solid var(--blue);
+  z-index: 0;
+}
+
+.dinner-title {
+  position: absolute;
+  left: 67.9%;
+  top: 19%;
+  width: 27.9%;
+  color: var(--red);
+  font-size: calc(67 * var(--scale));
+  text-align: right;
+  -webkit-text-stroke: calc(.6 * var(--scale)) var(--blue);
+}
+
+.desserts-title {
+  position: absolute;
+  left: 3.7%;
+  top: 78.2%;
+  width: 30%;
+  color: var(--sky);
+  font-size: calc(63 * var(--scale));
+  text-align: right;
+  -webkit-text-stroke: calc(.6 * var(--scale)) var(--blue);
+}
+
+.special {
+  position: absolute;
+  left: 9%;
+  top: 32.9%;
+  width: 79.7%;
+  color: var(--yellow);
+  font-size: calc(67 * var(--scale));
+  text-align: center;
+  -webkit-text-stroke: calc(.6 * var(--scale)) var(--blue);
+  z-index: 3;
+}
+
+.recipe {
+  position: absolute;
+  font-family: "Podkova", Georgia, serif;
+}
+
+.recipe h3 {
+  margin: 0 0 calc(4 * var(--scale));
+  font-size: calc(var(--title-size, 26.7) * var(--scale));
+  line-height: .98;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.recipe p {
+  margin: 0;
+  font-size: calc(13.35 * var(--scale));
+  line-height: 1.15;
+}
+
+.left h3 {
+  color: #ffb738;
+  font-size: calc(22.7 * var(--scale));
+}
+
+.left p {
+  color: var(--cream);
+}
+
+.right h3,
+.dessert h3 {
+  color: var(--blue);
+}
+
+.right p,
+.dessert p {
+  color: var(--red);
+}
+
+.r1 { left: 8.5%; top: 6%; width: 79.7%; }
+.r2 { left: 8.5%; top: 22.8%; width: 83%; }
+.r3 { left: 8.5%; top: 36.6%; width: 74.6%; }
+.r4 { left: 8.5%; top: 51.4%; width: 74.6%; }
+.r5 { left: 8.5%; top: 66.4%; width: 84.4%; }
+.r6 { left: 8.5%; top: 83%; width: 84.4%; }
+
+.right-list {
+  position: absolute;
+  inset: 0;
+}
+
+.rr1 { left: 52.8%; top: 31.9%; width: 43%; }
+.rr2 { left: 52.2%; top: 39.6%; width: 43%; }
+.rr3 { left: 51.8%; top: 48.9%; width: 43%; }
+.rr4 { left: 51.8%; top: 57.2%; width: 43%; }
+
+.dessert-list {
+  position: absolute;
+  inset: 0;
+}
+
+.d1 { left: 7.2%; top: 84.6%; width: 34.5%; }
+.d2 { left: 7.2%; top: 91.1%; width: 37.4%; }
+
+.special-recipe {
+  left: 8.5%;
+  top: 61.3%;
+  width: 82%;
+  text-align: center;
+  z-index: 3;
+}
+
+.special-recipe h3 {
+  color: var(--cream);
+}
+
+.special-recipe p {
+  width: 70%;
+  margin: calc(38 * var(--scale)) auto 0;
+  color: var(--cream);
+}
+
+.special-recipe strong {
+  position: absolute;
+  left: 31%;
+  top: 38%;
+  width: 38%;
+  color: var(--yellow);
+  font-size: calc(24 * var(--scale));
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ornament {
+  position: absolute;
+  left: 53.1%;
+  top: 67.8%;
+  width: 39.6%;
+  z-index: 1;
+}
+
+.dessert-illo {
+  position: absolute;
+  left: 37.4%;
+  top: 80.6%;
+  width: 9.4%;
+  transform: rotate(11.5deg);
+}
+
+@media (min-width: 795px) {
+  body {
+    padding: 24px;
+  }
+
+  .poster {
+    box-shadow: 0 18px 50px rgb(52 73 116 / .18);
+  }
+}
+
+@media (max-width: 600px) {
+  .poster {
+    height: calc(2700 * var(--scale));
+    aspect-ratio: auto;
+    overflow: hidden;
+  }
+
+  .checkers {
+    top: 0;
+    height: calc(130 * var(--scale));
+  }
+
+  .sign {
+    top: calc(36 * var(--scale));
+  }
+
+  .welcome {
+    top: calc(61 * var(--scale));
+  }
+
+  .brand {
+    top: calc(77 * var(--scale));
+  }
+
+  .kitchen {
+    top: calc(153 * var(--scale));
+  }
+
+  .sometimes {
+    top: calc(130 * var(--scale));
+  }
+
+  .best {
+    top: calc(52 * var(--scale));
+  }
+
+  .plate {
+    left: 63%;
+    top: calc(1118 * var(--scale));
+    width: 32%;
+  }
+
+  .easy {
+    left: 5%;
+    top: calc(236 * var(--scale));
+    width: 90%;
+    font-size: calc(48 * var(--scale));
+  }
+
+  .left-panel {
+    left: 5%;
+    top: calc(260 * var(--scale));
+    width: 90%;
+    height: calc(820 * var(--scale));
+  }
+
+  .left h3 {
+    font-size: calc(34 * var(--scale));
+  }
+
+  .left p {
+    font-size: calc(20 * var(--scale));
+    line-height: 1.08;
+  }
+
+  .dinner-title {
+    left: 5%;
+    top: calc(1135 * var(--scale));
+    width: 48%;
+    text-align: left;
+  }
+
+  .rr1,
+  .rr2,
+  .rr3,
+  .rr4 {
+    left: 5%;
+    width: 90%;
+  }
+
+  .right h3 {
+    font-size: calc(38 * var(--scale));
+  }
+
+  .right p {
+    font-size: calc(22 * var(--scale));
+    line-height: 1.08;
+  }
+
+  .rr1 { top: calc(1270 * var(--scale)); }
+  .rr2 { top: calc(1388 * var(--scale)); }
+  .rr3 { top: calc(1520 * var(--scale)); }
+  .rr4 { top: calc(1638 * var(--scale)); }
+
+  .special-panel {
+    left: 5%;
+    top: calc(1760 * var(--scale));
+    width: 90%;
+    height: calc(420 * var(--scale));
+  }
+
+  .ornament {
+    left: 10%;
+    top: calc(1775 * var(--scale));
+    width: 80%;
+  }
+
+  .special {
+    top: 41%;
+  }
+
+  .special-recipe {
+    top: 58%;
+  }
+
+  .special-recipe p {
+    width: 78%;
+    font-size: calc(20 * var(--scale));
+    line-height: 1.08;
+  }
+
+  .desserts-title {
+    left: 5%;
+    top: calc(2255 * var(--scale));
+    width: 90%;
+    font-size: calc(82 * var(--scale));
+    text-align: left;
+  }
+
+  .d1,
+  .d2 {
+    left: 5%;
+    width: 66%;
+  }
+
+  .d1 { top: calc(2365 * var(--scale)); }
+  .d2 { top: calc(2465 * var(--scale)); }
+
+  .dessert h3 {
+    font-size: calc(38 * var(--scale));
+  }
+
+  .dessert p {
+    font-size: calc(22 * var(--scale));
+    line-height: 1.08;
+  }
+
+  .dessert-illo {
+    left: 73%;
+    top: calc(2250 * var(--scale));
+    width: 14%;
+  }
+}

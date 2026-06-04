@@ -428,9 +428,9 @@ function addStoreControls(detail, anchor) {
   staplesField.className = "staples-toggle-field";
   staplesField.innerHTML = `
     <input type="checkbox" name="staples-visibility">
-    <span class="staples-option staples-option-show">stapelvaror syns</span>
+    <span class="staples-option staples-option-show">stapelvaror borta</span>
     <span class="staples-toggle-ui" aria-hidden="true"></span>
-    <span class="staples-option staples-option-hide">stapelvaror borta</span>
+    <span class="staples-option staples-option-hide">stapelvaror syns</span>
   `;
 
   detail.insertBefore(staplesField, anchor);

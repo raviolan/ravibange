@@ -1,3 +1,6 @@
+const SPREADSHEET_ID = "1TBldgc2G5nsNSno0KAv-PHuewv0Z_TB_WOdTS89Skgo";
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq`;
+
 const groceryStores = [
   "Coop Avenyn",
   "Willys Sten Sture",
@@ -5,276 +8,225 @@ const groceryStores = [
   "Hemköp Kullavik",
 ];
 
-const storeDepartmentRanks = {
-  "Coop Avenyn": ranks({
-    "grönsaker": 1,
-    "deli eller burkar": 3,
-    "fiskdisken": 4,
-    "mejeri": 5,
-    "kyl": 6,
-    "konserv": 9,
-    "burkar": 9,
-    "burk": 9,
-    "taco": 10,
-    "asiatisk": 11,
-    "bakning": 12,
-    "vid oljorna": 13,
-    "krydda": 14,
-    "kryddor": 14,
-    "buljong": 14,
-    "nötter": 15,
-    "glutenfritt": 16,
-    "glutenfritt, fryst": 16,
-    "te": 17,
-    "fryst": 18,
-    "frys": 18,
-    "systemet": 19,
-    "kassan": 20,
-  }),
-  "Willys Sten Sture": ranks({
-    "grönsaker": 1,
-    "deli eller burkar": 2,
-    "fiskdisken": 3,
-    "mejeri": 4,
-    "kyl": 5,
-    "asiatisk": 8,
-    "taco": 9,
-    "konserv": 10,
-    "burkar": 11,
-    "burk": 11,
-    "bakning": 12,
-    "krydda": 13,
-    "kryddor": 13,
-    "buljong": 13,
-    "vid oljorna": 14,
-    "glutenfritt": 15,
-    "glutenfritt, fryst": 15,
-    "nötter": 16,
-    "fryst": 17,
-    "frys": 17,
-    "te": 18,
-    "systemet": 19,
-    "kassan": 20,
-  }),
-  "Ica Focus": ranks({
-    "grönsaker": 1,
-    "deli eller burkar": 2,
-    "fiskdisken": 3,
-    "mejeri": 4,
-    "kyl": 5,
-    "fryst": 7,
-    "frys": 7,
-    "konserv": 8,
-    "burkar": 8,
-    "burk": 8,
-    "asiatisk": 9,
-    "taco": 10,
-    "bakning": 11,
-    "vid oljorna": 12,
-    "krydda": 13,
-    "kryddor": 13,
-    "buljong": 13,
-    "nötter": 14,
-    "glutenfritt": 15,
-    "glutenfritt, fryst": 15,
-    "te": 16,
-    "kassan": 17,
-    "systemet": 18,
-  }),
-  "Hemköp Kullavik": ranks({
-    "grönsaker": 1,
-    "deli eller burkar": 3,
-    "fiskdisken": 4,
-    "mejeri": 5,
-    "kyl": 6,
-    "asiatisk": 8,
-    "taco": 9,
-    "konserv": 10,
-    "burkar": 11,
-    "burk": 11,
-    "buljong": 12,
-    "bakning": 13,
-    "vid oljorna": 14,
-    "krydda": 15,
-    "kryddor": 15,
-    "nötter": 16,
-    "glutenfritt": 17,
-    "glutenfritt, fryst": 17,
-    "fryst": 18,
-    "frys": 19,
-    "te": 20,
-    "systemet": 21,
-    "kassan": 22,
-  }),
+const GENERAL_NAMES = new Set(["generell"]);
+const MAJSRORA_SLUG = "majsrora";
+
+const state = {
+  recipeMap: new Map(),
+  storeRanks: {},
+  majsroraItems: [],
 };
 
-const recipeIngredients = {
-  "fiskpinnetacos": [
-    item("chiliflakes", "krydda", "krydda", "staple"),
-    item("Fiskpinnar", "fisk", "fryst", "handla"),
-    item("tortillabröd", "bröd", "taco", "handla"),
-    item("majs", "burk", "konserv", "handla"),
-    item("fetaost", "ost", "mejeri", "handla"),
-    item("Lime", "färsk", "grönsaker", "handla"),
-    item("Grön chilisås", "sås", "burkar", "staple"),
-    item("krossade tomater", "burk", "konserv", "handla"),
-    item("avocado", "färsk", "grönsaker", "handla"),
-    item("koriander", "färsk", "grönsaker", "handla"),
-  ],
-  "den-saftiga-kycklingen": [
-    item("kycklingbröst", "färsk", "kyl", "handla"),
-    item("soja", "sås", "asiatisk", "staple"),
-    item("ostronsås", "sås", "asiatisk", "staple"),
-    item("majsstärkelse", "box", "bakning", "staple"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("färsk chili", "färsk", "grönsaker", "handla"),
-    item("sesamfrön", "torra", "kryddor", "staple"),
-    item("koriander", "färsk", "grönsaker", "handla"),
-    item("olja", "raps", "burkar", "staple"),
-  ],
-  "salsicciapasta": [
-    item("parmesan", "ost", "mejeri", "handla"),
-    item("krossade tomater", "burk", "konserv", "handla"),
-    item("tomatpuré", "tub", "konserv", "staple"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("gullök", "färsk", "grönsaker", "handla"),
-    item("basilika", "färsk", "grönsaker", "handla"),
-    item("spaghetti", "barilla", "glutenfritt", "handla"),
-    item("balsamvinäger", "sås", "vid oljorna", "staple"),
-  ],
-  "falafelhistoria": [
-    item("falafel", "fryst", "fryst", "handla"),
-    item("Pitabröd, tunnbröd", "bröd", "glutenfritt, fryst", "handla"),
-    item("sallad", "cosmo eller påse", "grönsaker", "handla"),
-    item("tahini", "burk", "", "staple"),
-    item("turkisk yoghurt", "burk", "mejeri", "handla"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("mynta", "färsk", "grönsaker", "handla"),
-    item("Chiliolja", "Lao gan ma", "asiatisk", "staple"),
-    item("citron", "grönsaker", "grönsaker", "handla"),
-    item("sumak", "krydda", "burk", "staple"),
-  ],
-  "sallad": [
-    item("majs", "burk", "konserv", "handla"),
-    item("fetaost", "ost", "mejeri", "handla"),
-    item("parmesan", "ost", "mejeri", "handla"),
-    item("småbladssallad", "påse", "grönsaker", "handla"),
-    item("rödlök", "färsk", "grönsaker", "handla"),
-    item("soltorkad tomat", "burk", "burkar", "handla"),
-    item("pasta", "", "glutenfritt", "handla"),
-    item("salami", "pålägg", "kyl", "handla"),
-  ],
-  "den-kramiga-kycklingen": [
-    item("chiliflakes", "krydda", "krydda", "staple"),
-    item("parmesan", "ost", "mejeri", "handla"),
-    item("kycklingbröst", "färsk", "kyl", "handla"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("färsk chili", "färsk", "grönsaker", "handla"),
-    item("citron", "grönsaker", "grönsaker", "handla"),
-    item("soltorkad tomat", "burk", "burkar", "handla"),
-    item("babyspenat", "påse", "grönsaker", "handla"),
-    item("färsk tomat", "färsk", "grönsaker", "handla"),
-    item("grädde", "5 dl", "mejeri", "handla"),
-  ],
-  "almost-sandstorm": [
-    item("färs", "", "", "handla"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("crispy chili", "Lao gan ma", "asiatisk", "staple"),
-    item("sichuanpeppar", "krydda, refill", "asiatisk", "staple"),
-    item("spiskummin", "krydda, refill", "kryddor", "staple"),
-    item("svart vinäger", "sås", "flaska", "staple"),
-    item("xiaoxing wine", "matlagningsvin", "asiatisk", "staple"),
-  ],
-  "birria": [
-    item("tortillabröd", "bröd", "taco", "handla"),
-    item("majs", "burk", "konserv", "handla"),
-    item("fetaost", "ost", "mejeri", "handla"),
-    item("Lime", "färsk", "grönsaker", "handla"),
-    item("krossade tomater", "burk", "konserv", "handla"),
-    item("tomatpuré", "tub", "konserv", "staple"),
-    item("avocado", "färsk", "grönsaker", "handla"),
-    item("koriander", "färsk", "grönsaker", "handla"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("gullök", "färsk", "grönsaker", "handla"),
-    item("spiskummin", "krydda, refill", "kryddor", "staple"),
-    item("Nötkött", "köttbitar", "kyl", "handla"),
-    item("oregano", "burk", "kryddor", "handla"),
-    item("ingefära", "färsk", "grönsaker", "handla"),
-    item("Jalapeño", "alt. grön chili", "grönsaker", "handla"),
-  ],
-  "lax-med-oliver": [
-    item("mynta", "färsk", "grönsaker", "handla"),
-    item("citron", "grönsaker", "grönsaker", "handla"),
-    item("Lax", "helst färsk", "fiskdisken", "handla"),
-    item("fänkål", "färsk", "grönsaker", "handla"),
-    item("Castelvetranooliver", "burk", "deli eller burkar", "handla"),
-    item("scharlottenlök", "färsk", "grönsaker", "handla"),
-    item("persilja", "färsk", "grönsaker", "handla"),
-  ],
-  "mormors-kottbullar": [
-    item("krossade tomater", "burk", "konserv", "handla"),
-    item("tomatpuré", "tub", "konserv", "staple"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("gullök", "färsk", "grönsaker", "handla"),
-    item("koriander", "färsk", "grönsaker", "handla"),
-    item("färsk tomat", "färsk", "grönsaker", "handla"),
-    item("ingefära", "färsk", "grönsaker", "handla"),
-    item("Jalapeño", "alt. grön chili", "grönsaker", "handla"),
-    item("lammfärs", "färsk", "kyl", "handla"),
-    item("ris", "basmati", "", "staple"),
-  ],
-  "kulfi-ice-cream": [
-    item("grädde", "5 dl", "mejeri", "handla"),
-    item("kondenserad mjölk", "burk", "konserv", "handla"),
-    item("elaichi", "kummin, gröna kapslar", "kryddor", "staple"),
-    item("pistagenötter", "osaltade", "nötter", "handla"),
-    item("mandel", "osaltade", "nötter", "handla"),
-    item("saffran", "torkad", "kassan", "handla"),
-  ],
-  "masala-chai": [
-    item("mynta", "färsk", "grönsaker", "handla"),
-    item("ingefära", "färsk", "grönsaker", "handla"),
-    item("elaichi", "kummin, gröna kapslar", "kryddor", "staple"),
-    item("svart te", "lös, earl grey", "te", "staple"),
-    item("socker", "vanligt", "bakning", "staple"),
-    item("mjölk", "röd", "mejeri", "handla"),
-    item("nutmeg", "muskot", "krydda", "handla"),
-    item("cinnamon", "kanelstång", "krydda", "handla"),
-    item("cloves", "nejlika", "krydda", "handla"),
-    item("star anise", "stjärnanis", "krydda", "handla"),
-  ],
-  "moules-frites": [
-    item("grädde", "5 dl", "mejeri", "handla"),
-    item("vitlök", "torkad", "grönsaker", "staple"),
-    item("scharlottenlök", "färsk", "grönsaker", "handla"),
-    item("persilja", "färsk", "grönsaker", "handla"),
-    item("blåmusslor", "fäska", "fiskdisken", "handla"),
-    item("vitt vin", "torrt", "systemet", "handla"),
-    item("kycklingfond", "flaska", "buljong", "handla"),
-    item("pommes", "fryst", "frys", "handla"),
-  ],
-};
+const CACHE_KEY = "ravibange_spreadsheet_cache_v1";
 
-const majsroraIngredients = [
-  item("fetaost", "ost", "mejeri", "handla"),
-  item("parmesan", "ost", "mejeri", "handla"),
-  item("Lime", "färsk", "grönsaker", "handla"),
-  item("koriander", "färsk", "grönsaker", "handla"),
-];
+function loadSheet(sheetName, query = "select A,B,C,D,E") {
+  return new Promise((resolve, reject) => {
+    const callbackName = `__sheet_${sheetName}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement("script");
+    let finished = false;
 
-const recipesWithMajsrora = new Set([
-  "fiskpinnetacos",
-  "birria",
-]);
+    const cleanup = () => {
+      if (finished) return;
+      finished = true;
+      delete window[callbackName];
+      script.remove();
+    };
 
-function item(name, hint, section, notes) {
-  return { name, hint, section, notes };
+    const fail = (error) => {
+      cleanup();
+      reject(error);
+    };
+
+    window[callbackName] = (response) => {
+      cleanup();
+      resolve(response);
+    };
+
+    script.onerror = () => fail(new Error(`Failed to load sheet: ${sheetName}`));
+    script.src = `${SHEET_URL}?sheet=${encodeURIComponent(sheetName)}&tqx=responseHandler:${callbackName};out:json&tq=${encodeURIComponent(query)}`;
+    document.head.append(script);
+
+    window.setTimeout(() => {
+      if (!finished) fail(new Error(`Timed out loading sheet: ${sheetName}`));
+    }, 10000);
+  });
 }
 
-function ranks(values) {
-  return Object.fromEntries(
-    Object.entries(values).map(([department, rank]) => [department.toLowerCase(), rank])
-  );
+function normalizeText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function slugify(value) {
+  return normalizeText(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function canonicalAvdelning(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) return "";
+  if (normalized === "veggie" || normalized === "veggies" || normalized.startsWith("gronsaker")) {
+    return "grönsaker";
+  }
+  if (normalized === "generell") {
+    return "generell";
+  }
+  return String(value).trim();
+}
+
+function displayTag(value) {
+  return canonicalAvdelning(value);
+}
+
+function cellValue(cell) {
+  return cell && cell.v != null ? String(cell.v).trim() : "";
+}
+
+function rowsFromResponse(response) {
+  return response?.table?.rows?.map((row) => (row.c || []).map(cellValue)) ?? [];
+}
+
+function saveCache(payload) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage failures and continue using live data.
+  }
+}
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function rowKey(item) {
+  return [
+    normalizeText(item.name),
+    normalizeText(item.hint),
+    normalizeText(item.section),
+    normalizeText(item.notes),
+    normalizeText(item.alternativ),
+    item.inMajsrora ? "majsrora" : "",
+  ].join("|");
+}
+
+function parseRecipeSheet(rows) {
+  const recipeMap = new Map();
+  const majsroraItems = [];
+  const records = [];
+  const allRecipeSlugs = new Set();
+
+  for (const row of rows.slice(1)) {
+    const [recipesRaw, ingredientRaw, hintRaw, sectionRaw, notesRaw, alternativRaw] = row;
+    if (!recipesRaw || !ingredientRaw) continue;
+
+    const item = {
+      name: ingredientRaw.trim(),
+      hint: String(hintRaw ?? "").trim(),
+      section: displayTag(sectionRaw),
+      notes: String(notesRaw ?? "").trim().toLowerCase(),
+      alternativ: String(alternativRaw ?? "").trim(),
+      inMajsrora: false,
+    };
+
+    const recipeNames = recipesRaw
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
+
+    const hasGeneral = recipeNames.some((name) => GENERAL_NAMES.has(normalizeText(name)));
+    const hasMajsrora = recipeNames.some((name) => normalizeText(name) === MAJSRORA_SLUG);
+
+    const itemForRecipes = hasMajsrora ? { ...item, inMajsrora: true } : item;
+    const itemForMajsrora = hasMajsrora ? { ...item, inMajsrora: true } : null;
+
+    if (hasMajsrora) {
+      majsroraItems.push(itemForMajsrora);
+    }
+
+    const targets = [];
+    for (const recipeName of recipeNames) {
+      const normalized = normalizeText(recipeName);
+      if (!normalized || GENERAL_NAMES.has(normalized) || normalized === MAJSRORA_SLUG) {
+        continue;
+      }
+
+      const slug = slugify(recipeName);
+      if (!slug) continue;
+
+      allRecipeSlugs.add(slug);
+      targets.push(slug);
+    }
+
+    records.push({
+      item: itemForRecipes,
+      targets,
+      isGeneral: hasGeneral,
+    });
+  }
+
+  for (const slug of allRecipeSlugs) {
+    const bucket = [];
+    for (const record of records) {
+      if (record.isGeneral || record.targets.includes(slug)) {
+        bucket.push(record.item);
+      }
+    }
+    recipeMap.set(slug, dedupeItems(bucket));
+  }
+
+  return {
+    recipeMap,
+    majsroraItems: dedupeItems(majsroraItems),
+  };
+}
+
+function dedupeItems(items) {
+  const seen = new Set();
+  const result = [];
+
+  for (const item of items) {
+    const key = rowKey(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+
+  return result;
+}
+
+function parseButikSheet(rows) {
+  const headers = rows[0] || [];
+  const storeRankMaps = Object.fromEntries(groceryStores.map((store) => [store, {}]));
+  const storeColumnIndex = new Map();
+
+  for (const store of groceryStores) {
+    const idx = headers.findIndex((header) => normalizeText(header) === normalizeText(store));
+    if (idx >= 0) storeColumnIndex.set(store, idx);
+  }
+
+  for (const row of rows.slice(1)) {
+    const section = canonicalAvdelning(row[0]);
+    if (!section) continue;
+
+    for (const store of groceryStores) {
+      const idx = storeColumnIndex.get(store);
+      const rawRank = idx != null ? row[idx] : "";
+      const rank = Number(rawRank);
+      if (!Number.isFinite(rank)) continue;
+      storeRankMaps[store][section] = rank;
+    }
+  }
+
+  return storeRankMaps;
 }
 
 function currentRecipeSlug() {
@@ -282,9 +234,10 @@ function currentRecipeSlug() {
 }
 
 function rankForStore(row, store) {
-  if (!store || !storeDepartmentRanks[store]) return Number.POSITIVE_INFINITY;
-  const section = (row.dataset.section || "").toLowerCase();
-  return storeDepartmentRanks[store][section] ?? Number.POSITIVE_INFINITY;
+  const section = normalizeText(row.dataset.section);
+  const rankMap = state.storeRanks[store];
+  if (!rankMap || !section) return Number.POSITIVE_INFINITY;
+  return rankMap[section] ?? Number.POSITIVE_INFINITY;
 }
 
 function shouldShowStaples() {
@@ -299,10 +252,10 @@ function syncStapleVisibility() {
   });
 }
 
-function sortedShoppingRows(wrapper) {
+function sortedRowsInList(list) {
   const store = document.querySelector("[name='grocery-store']")?.value || "";
 
-  return [...wrapper.querySelectorAll(".ingredient-row")]
+  return [...list.querySelectorAll(".ingredient-row")]
     .filter((row) => !row.hidden)
     .map((row, index) => ({ row, index, rank: rankForStore(row, store) }))
     .sort((a, b) => a.rank - b.rank || a.index - b.index)
@@ -311,19 +264,28 @@ function sortedShoppingRows(wrapper) {
 
 function sortVisibleIngredients(store) {
   document.querySelectorAll(".ingredient-items").forEach((list) => {
-    const rows = [...list.querySelectorAll(".ingredient-row")];
-    const sortedRows = rows
+    const sorted = [...list.querySelectorAll(".ingredient-row")]
       .map((row, index) => ({ row, index, rank: rankForStore(row, store) }))
       .sort((a, b) => a.rank - b.rank || a.index - b.index)
       .map(({ row }) => row);
 
-    sortedRows.forEach((row) => list.append(row));
+    sorted.forEach((row) => list.append(row));
   });
 }
 
-function renderIngredientList(list, ingredients) {
-  const enhancedList = document.createElement("ul");
-  enhancedList.className = "ingredients-list ingredient-items";
+function metaEntry(label, value) {
+  const fragment = document.createDocumentFragment();
+  const dt = document.createElement("dt");
+  const dd = document.createElement("dd");
+  dt.textContent = label;
+  dd.textContent = value;
+  fragment.append(dt, dd);
+  return fragment;
+}
+
+function renderIngredientList(ingredients) {
+  const ul = document.createElement("ul");
+  ul.className = "ingredients-list ingredient-items";
 
   ingredients.forEach((ingredient) => {
     const row = document.createElement("li");
@@ -349,22 +311,26 @@ function renderIngredientList(list, ingredients) {
       meta.append(metaEntry("Avdelning", ingredient.section));
     }
 
+    if (ingredient.alternativ) {
+      meta.append(metaEntry("Alternativ", ingredient.alternativ));
+    }
+
     toggle.addEventListener("click", () => {
-      const isOpen = toggle.getAttribute("aria-expanded") === "true";
-      toggle.setAttribute("aria-expanded", String(!isOpen));
-      meta.hidden = isOpen;
+      const open = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", String(!open));
+      meta.hidden = open;
     });
 
     row.append(toggle, meta);
-    enhancedList.append(row);
+    ul.append(row);
   });
 
-  list.replaceWith(enhancedList);
-  return enhancedList;
+  return ul;
 }
 
 function addMajsroraBox(detail) {
-  if (!recipesWithMajsrora.has(currentRecipeSlug())) return;
+  const currentItems = state.recipeMap.get(currentRecipeSlug()) || [];
+  if (!currentItems.some((item) => item.inMajsrora)) return;
 
   const mainSection = detail.querySelector("section");
   if (!mainSection) return;
@@ -379,20 +345,7 @@ function addMajsroraBox(detail) {
   mainSection.insertAdjacentElement("afterend", section);
 }
 
-function metaEntry(label, value) {
-  const fragment = document.createDocumentFragment();
-  const dt = document.createElement("dt");
-  const dd = document.createElement("dd");
-  dt.textContent = label;
-  dd.textContent = value;
-  fragment.append(dt, dd);
-  return fragment;
-}
-
-document.querySelectorAll(".recipe-detail").forEach((detail) => {
-  const ingredientsSection = detail.querySelector("section");
-  if (!ingredientsSection) return;
-
+function addStoreControls(detail, anchor) {
   const field = document.createElement("label");
   field.className = "store-select-field";
   field.innerHTML = `
@@ -402,8 +355,6 @@ document.querySelectorAll(".recipe-detail").forEach((detail) => {
       ${groceryStores.map((store) => `<option value="${store}">${store}</option>`).join("")}
     </select>
   `;
-
-  detail.insertBefore(field, ingredientsSection);
 
   const staplesField = document.createElement("label");
   staplesField.className = "staples-toggle-field";
@@ -416,8 +367,8 @@ document.querySelectorAll(".recipe-detail").forEach((detail) => {
     </span>
   `;
 
-  detail.insertBefore(staplesField, ingredientsSection);
-  addMajsroraBox(detail);
+  detail.insertBefore(staplesField, anchor);
+  detail.insertBefore(field, staplesField);
 
   field.querySelector("select").addEventListener("change", (event) => {
     sortVisibleIngredients(event.target.value);
@@ -426,19 +377,9 @@ document.querySelectorAll(".recipe-detail").forEach((detail) => {
   staplesField.querySelector("input").addEventListener("change", () => {
     syncStapleVisibility();
   });
-});
+}
 
-document.querySelectorAll(".ingredients-list").forEach((list) => {
-  const data = list.dataset.ingredients === "majsrora"
-    ? majsroraIngredients
-    : recipeIngredients[currentRecipeSlug()];
-  const activeList = data ? renderIngredientList(list, data) : list;
-  const wrapper = document.createElement("div");
-  wrapper.className = "ingredients-wrap";
-
-  activeList.parentNode.insertBefore(wrapper, activeList);
-  wrapper.appendChild(activeList);
-
+function addCopyButton(wrapper) {
   const button = document.createElement("button");
   button.className = "copy-ingredients";
   button.type = "button";
@@ -448,10 +389,10 @@ document.querySelectorAll(".ingredients-list").forEach((list) => {
 
   button.addEventListener("click", async () => {
     const originalLabel = button.getAttribute("aria-label");
-    const shoppingItems = sortedShoppingRows(wrapper)
-      .map((row) => row.querySelector(".ingredient-name").textContent.trim());
-  const fallback = activeList.textContent.trim();
-  const copyText = (shoppingItems.length ? shoppingItems.join("\n") : fallback);
+    const shoppingItems = sortedRowsInList(wrapper).map((row) =>
+      row.querySelector(".ingredient-name").textContent.trim(),
+    );
+    const copyText = shoppingItems.join("\n");
 
     try {
       await navigator.clipboard.writeText(copyText);
@@ -469,6 +410,99 @@ document.querySelectorAll(".ingredients-list").forEach((list) => {
       button.title = "Copy failed";
     }
   });
-});
+}
 
-syncStapleVisibility();
+function wrapIngredientList(placeholder, renderedList) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "ingredients-wrap";
+
+  placeholder.parentNode.insertBefore(wrapper, placeholder);
+  placeholder.remove();
+  wrapper.appendChild(renderedList);
+  addCopyButton(wrapper);
+}
+
+async function bootstrap() {
+  document.querySelectorAll(".ingredients-list").forEach((list) => {
+    list.textContent = "";
+  });
+
+  try {
+    const [recipeResponse, butikResponse] = await Promise.all([
+      loadSheet("recipe"),
+      loadSheet("butik"),
+    ]);
+
+    const recipeRows = rowsFromResponse(recipeResponse);
+    const butikRows = rowsFromResponse(butikResponse);
+
+    saveCache({ recipeRows, butikRows, fetchedAt: Date.now() });
+    applySpreadsheetData(recipeRows, butikRows, { source: "live" });
+  } catch (error) {
+    const cached = loadCache();
+    if (cached?.recipeRows?.length && cached?.butikRows?.length) {
+      applySpreadsheetData(cached.recipeRows, cached.butikRows, { source: "cache" });
+      return;
+    }
+
+    throw error;
+  }
+}
+
+function applySpreadsheetData(recipeRows, butikRows, { source }) {
+  const parsedRecipe = parseRecipeSheet(recipeRows);
+  state.recipeMap = parsedRecipe.recipeMap;
+  state.majsroraItems = parsedRecipe.majsroraItems;
+  state.storeRanks = parseButikSheet(butikRows);
+
+  renderCurrentRecipePage(source);
+}
+
+function renderCurrentRecipePage(source = "live") {
+  const detail = document.querySelector(".recipe-detail");
+  if (!detail) return;
+
+  const ingredientsAnchor = detail.querySelector("section");
+  if (!ingredientsAnchor) return;
+
+  addStoreControls(detail, ingredientsAnchor);
+  addMajsroraBox(detail);
+
+  document.querySelectorAll(".ingredients-list").forEach((list) => {
+    const isMajsrora = list.dataset.ingredients === MAJSRORA_SLUG;
+    const items = isMajsrora
+      ? state.majsroraItems
+      : state.recipeMap.get(currentRecipeSlug()) || [];
+
+    const renderedList = renderIngredientList(items);
+    wrapIngredientList(list, renderedList);
+  });
+
+  const storeSelect = document.querySelector("[name='grocery-store']");
+  if (storeSelect) {
+    storeSelect.addEventListener("change", (event) => {
+      sortVisibleIngredients(event.target.value);
+    });
+  }
+
+  syncStapleVisibility();
+  sortVisibleIngredients(storeSelect?.value || "");
+
+  if (source === "cache") {
+    const note = document.createElement("p");
+    note.className = "recipe-cache-note";
+    note.textContent = "Visar sparad version.";
+    detail.insertBefore(note, detail.querySelector(".store-select-field"));
+  }
+}
+
+bootstrap().catch((error) => {
+  const detail = document.querySelector(".recipe-detail");
+  if (detail) {
+    detail.innerHTML = `
+      <a class="back-link" href="../index.html">Tillbaka</a>
+      <p class="recipe-error">Kunde inte läsa kalkylarket och ingen sparad version fanns.</p>
+    `;
+  }
+  console.error(error);
+});

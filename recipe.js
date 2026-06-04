@@ -208,14 +208,13 @@ function parseRecipeSheet(rows) {
     records.push({
       item: itemForRecipes,
       targets,
-      isGeneral: hasGeneral,
     });
   }
 
   for (const slug of allRecipeSlugs) {
     const bucket = [];
     for (const record of records) {
-      if (record.isGeneral || record.targets.includes(slug)) {
+      if (record.targets.includes(slug)) {
         bucket.push(record.item);
       }
     }

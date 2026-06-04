@@ -9,7 +9,9 @@ const groceryStores = [
 ];
 
 const GENERAL_NAMES = new Set(["generell"]);
+const GENERAL_STAPLES_SLUG = "generell-staples-inkopslista";
 const MAJSRORA_SLUG = "majsrora";
+const MAJSRORA_RECIPE_SLUGS = new Set(["birria", "fiskpinnetacos", "falafelhistoria"]);
 
 const state = {
   recipeMap: new Map(),
@@ -120,6 +122,7 @@ function rowKey(item) {
 
 function parseRecipeSheet(rows) {
   const recipeMap = new Map();
+  const generalItems = [];
   const majsroraItems = [];
   const records = [];
   const allRecipeSlugs = new Set();
@@ -147,6 +150,10 @@ function parseRecipeSheet(rows) {
 
     const itemForRecipes = hasMajsrora ? { ...item, inMajsrora: true } : item;
     const itemForMajsrora = hasMajsrora ? { ...item, inMajsrora: true } : null;
+
+    if (hasGeneral) {
+      generalItems.push(itemForRecipes);
+    }
 
     if (hasMajsrora) {
       majsroraItems.push(itemForMajsrora);
@@ -182,6 +189,8 @@ function parseRecipeSheet(rows) {
     }
     recipeMap.set(slug, dedupeItems(bucket));
   }
+
+  recipeMap.set(GENERAL_STAPLES_SLUG, dedupeItems(generalItems));
 
   return {
     recipeMap,
@@ -329,8 +338,7 @@ function renderIngredientList(ingredients) {
 }
 
 function addMajsroraBox(detail) {
-  const currentItems = state.recipeMap.get(currentRecipeSlug()) || [];
-  if (!currentItems.some((item) => item.inMajsrora)) return;
+  if (!MAJSRORA_RECIPE_SLUGS.has(currentRecipeSlug())) return;
 
   const mainSection = detail.querySelector("section");
   if (!mainSection) return;

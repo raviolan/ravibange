@@ -29,11 +29,16 @@ body {
 .poster {
   position: relative;
   width: var(--poster-w);
-  aspect-ratio: 21 / 29.7;
   overflow: hidden;
   background: var(--cream);
   font-family: "Podkova", Georgia, serif;
   isolation: isolate;
+}
+
+.poster-stage {
+  position: relative;
+  height: calc(1122.7 * var(--scale));
+  overflow: hidden;
 }
 
 .display {
@@ -344,6 +349,63 @@ body {
   transform: rotate(11.5deg);
 }
 
+.more-area {
+  position: relative;
+  width: 92%;
+  height: calc(450 * var(--scale));
+  margin: 0 3% calc(30 * var(--scale));
+}
+
+.more-title {
+  position: relative;
+  width: 100%;
+  color: var(--yellow);
+  font-size: calc(31 * var(--scale));
+  text-align: center;
+  text-shadow:
+    calc(1.4 * var(--scale)) calc(1.4 * var(--scale)) 0 var(--blue),
+    calc(-1 * var(--scale)) calc(1 * var(--scale)) 0 var(--blue);
+  z-index: 2;
+}
+
+.more-panel {
+  position: relative;
+  width: 100%;
+  height: calc(405 * var(--scale));
+  margin-top: calc(-8 * var(--scale));
+}
+
+.more-recipe {
+  width: 40%;
+}
+
+.m1,
+.m2,
+.m3 {
+  left: 5%;
+}
+
+.m4,
+.m5,
+.m6 {
+  left: 54%;
+}
+
+.m1,
+.m4 {
+  top: 9%;
+}
+
+.m2,
+.m5 {
+  top: 37%;
+}
+
+.m3,
+.m6 {
+  top: 65%;
+}
+
 @media (min-width: 795px) {
   body {
     padding: 24px;
@@ -355,10 +417,8 @@ body {
 }
 
 @media (max-width: 600px) {
-  .poster {
-    height: calc(2700 * var(--scale));
-    aspect-ratio: auto;
-    overflow: hidden;
+  .poster-stage {
+    height: calc(2585 * var(--scale));
   }
 
   .checkers {
@@ -506,6 +566,33 @@ body {
     top: calc(2250 * var(--scale));
     width: 14%;
   }
+
+  .more-area {
+    width: 90%;
+    height: calc(875 * var(--scale));
+    margin: 0 5% calc(36 * var(--scale));
+  }
+
+  .more-title {
+    font-size: calc(55 * var(--scale));
+  }
+
+  .more-panel {
+    height: calc(820 * var(--scale));
+    margin-top: calc(-10 * var(--scale));
+  }
+
+  .more-recipe {
+    left: 8.5%;
+    width: 84.4%;
+  }
+
+  .m1 { top: 6%; }
+  .m2 { top: 22.8%; }
+  .m3 { top: 36.6%; }
+  .m4 { top: 51.4%; }
+  .m5 { top: 66.4%; }
+  .m6 { top: 83%; }
 }
 
 .recipe-page {

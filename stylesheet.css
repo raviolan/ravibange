@@ -284,7 +284,13 @@ body {
   width: calc(18 * var(--scale));
   height: calc(18 * var(--scale));
   border: calc(2 * var(--scale)) solid currentColor;
+  border-radius: calc(3 * var(--scale));
   background: var(--cream);
+}
+
+.special-recipe .recipe-select-field {
+  left: calc(10 * var(--scale));
+  top: calc(4 * var(--scale));
 }
 
 .recipe-select-input:checked + .recipe-select-box {
@@ -610,6 +616,12 @@ body {
   .recipe-select-box {
     width: calc(28 * var(--scale));
     height: calc(28 * var(--scale));
+    border-radius: calc(4 * var(--scale));
+  }
+
+  .special-recipe .recipe-select-field {
+    right: calc(20 * var(--scale));
+    top: calc(-31 * var(--scale));
   }
 
   .dinner-title {

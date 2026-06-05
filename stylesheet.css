@@ -98,10 +98,14 @@ body {
 .brand {
   position: absolute;
   left: 27.7%;
-  top: 6.89%;
+  top: 8%;
   width: 44.5%;
   color: var(--yellow);
-  font-size: calc(81 * var(--scale));
+  font-family: "Sigmar One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: calc(49 * var(--scale));
+  line-height: .96;
   text-align: center;
   -webkit-text-stroke: calc(.7 * var(--scale)) var(--blue);
   text-shadow: calc(1.4 * var(--scale)) calc(1.4 * var(--scale)) 0 var(--blue);
@@ -435,7 +439,7 @@ body {
   }
 
   .brand {
-    top: calc(85 * var(--scale));
+    top: calc(95 * var(--scale));
   }
 
   .kitchen {
@@ -640,7 +644,13 @@ body {
   max-width: 11ch;
   margin: 4px 0 clamp(28px, 8vw, 56px);
   color: var(--red);
-  font-size: clamp(64px, 18vw, 132px);
+  font-family: "Sigmar One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: clamp(42px, 11vw, 92px);
+  line-height: .98;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
   -webkit-text-stroke: 1px var(--blue);
   text-shadow: 2px 2px 0 var(--blue);
 }
@@ -788,6 +798,21 @@ body {
 .staples-toggle-field input:checked ~ .staples-option-hide {
   opacity: 1;
   color: var(--blue);
+}
+
+@media (max-width: 600px) {
+  .staples-toggle-field {
+    gap: 8px;
+    font-size: clamp(15px, 4.2vw, 19px);
+  }
+
+  .staples-option {
+    overflow-wrap: anywhere;
+  }
+
+  .staples-option-show {
+    text-align: right;
+  }
 }
 
 .recipe-detail section p,

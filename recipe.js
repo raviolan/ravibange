@@ -19,8 +19,10 @@ const state = {
   majsroraItems: [],
 };
 
-const CACHE_KEY = "ravibange_spreadsheet_cache_v1";
+const CACHE_KEY = "ravibange_spreadsheet_cache_v2";
 const INGREDIENT_CHECKS_CACHE_PREFIX = "ravibange_ingredient_checks_v1";
+const GENERATED_LIST_CHECKS_CACHE_PREFIX = "ravibange_generated_ingredient_checks_v1";
+const GENERATED_LIST_RECIPES_CACHE_KEY = "ravibange_generated_recipe_slugs_v1";
 
 function loadSheet(sheetName, query = "select A,B,C,D,E,F") {
   return new Promise((resolve, reject) => {
@@ -118,6 +120,10 @@ function ingredientChecksCacheKey(listType) {
   return `${INGREDIENT_CHECKS_CACHE_PREFIX}:${currentRecipeSlug()}:${listType}`;
 }
 
+function generatedListChecksCacheKey(recipeSlugs) {
+  return `${GENERATED_LIST_CHECKS_CACHE_PREFIX}:${[...recipeSlugs].sort().join(",")}`;
+}
+
 function loadCheckedIngredientKeys(storageKey) {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -141,6 +147,35 @@ function saveCheckedIngredientKeys(storageKey, checkedKeys) {
   }
 }
 
+function loadGeneratedRecipeSlugs() {
+  try {
+    const raw = localStorage.getItem(GENERATED_LIST_RECIPES_CACHE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveGeneratedRecipeSlugs(recipeSlugs) {
+  try {
+    if (recipeSlugs.length) {
+      localStorage.setItem(GENERATED_LIST_RECIPES_CACHE_KEY, JSON.stringify(recipeSlugs));
+      return;
+    }
+
+    localStorage.removeItem(GENERATED_LIST_RECIPES_CACHE_KEY);
+  } catch {
+    // Ignore storage failures; the generated list still works for this page view.
+  }
+}
+
+function clearGeneratedListState(recipeSlugs) {
+  const storageKey = generatedListChecksCacheKey(recipeSlugs);
+  saveCheckedIngredientKeys(storageKey, new Set());
+  saveGeneratedRecipeSlugs([]);
+}
+
 function rowKey(item) {
   return [
     normalizeText(item.name),
@@ -152,6 +187,27 @@ function rowKey(item) {
   ].join("|");
 }
 
+function aggregateKey(item) {
+  return normalizeText(item.name);
+}
+
+function parseAmountPerRecipe(value) {
+  if (value === "") return null;
+  const amount = Number(String(value).replace(",", "."));
+  return Number.isFinite(amount) ? amount : null;
+}
+
+function formatAmount(value) {
+  if (!Number.isFinite(value)) return "";
+  return String(Math.ceil(value));
+}
+
+function displayIngredientName(ingredient) {
+  const amount = Number(ingredient.totalAmount);
+  if (!Number.isFinite(amount) || amount <= 0) return ingredient.name;
+  return `${ingredient.name} x ${formatAmount(amount)}`;
+}
+
 function parseRecipeSheet(rows) {
   const recipeMap = new Map();
   const generalItems = [];
@@ -160,7 +216,7 @@ function parseRecipeSheet(rows) {
   const allRecipeSlugs = new Set();
 
   for (const row of rows.slice(1)) {
-    const [recipesRaw, ingredientRaw, hintRaw, sectionRaw, notesRaw, alternativRaw] = row;
+    const [recipesRaw, ingredientRaw, hintRaw, sectionRaw, notesRaw, alternativRaw, amountRaw = ""] = row;
     if (!recipesRaw || !ingredientRaw) continue;
 
     const item = {
@@ -169,6 +225,7 @@ function parseRecipeSheet(rows) {
       section: displayTag(sectionRaw),
       notes: String(notesRaw ?? "").trim().toLowerCase(),
       alternativ: String(alternativRaw ?? "").trim(),
+      amountPerRecipe: parseAmountPerRecipe(amountRaw),
       inMajsrora: false,
     };
 
@@ -354,7 +411,11 @@ function renderIngredientList(ingredients, storageKey) {
     toggle.className = "ingredient-toggle";
     toggle.type = "button";
     toggle.setAttribute("aria-expanded", "false");
-    toggle.innerHTML = `<span class="ingredient-name">${ingredient.name}</span>`;
+
+    const ingredientName = document.createElement("span");
+    ingredientName.className = "ingredient-name";
+    ingredientName.textContent = displayIngredientName(ingredient);
+    toggle.append(ingredientName);
 
     const meta = document.createElement("dl");
     meta.className = "ingredient-meta";
@@ -394,6 +455,238 @@ function renderIngredientList(ingredients, storageKey) {
   });
 
   return ul;
+}
+
+function recipeSlugFromLink(link) {
+  const href = link?.getAttribute("href") || "";
+  const filename = href.split("/").pop() || "";
+  return filename.replace(/\.html$/, "");
+}
+
+function getSelectedRecipeSlugs() {
+  return [...document.querySelectorAll(".recipe-select-input:checked")]
+    .map((checkbox) => checkbox.dataset.recipeSlug)
+    .filter(Boolean);
+}
+
+function itemsForShoppingRecipe(slug) {
+  const items = [...(state.recipeMap.get(slug) || [])];
+
+  if (MAJSRORA_RECIPE_SLUGS.has(slug)) {
+    items.push(...state.majsroraItems);
+  }
+
+  return dedupeItems(items);
+}
+
+function aggregateShoppingItems(recipeSlugs) {
+  const grouped = new Map();
+
+  for (const slug of recipeSlugs) {
+    for (const item of itemsForShoppingRecipe(slug)) {
+      const key = aggregateKey(item);
+      if (!key) continue;
+
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          item: { ...item, inMajsrora: false },
+          totalAmount: 0,
+        });
+      }
+
+      const group = grouped.get(key);
+      if (Number.isFinite(item.amountPerRecipe)) {
+        group.totalAmount += item.amountPerRecipe;
+      }
+    }
+  }
+
+  return [...grouped.values()].map((group) => ({
+    ...group.item,
+    totalAmount: group.totalAmount > 0 ? group.totalAmount : null,
+  }));
+}
+
+function updateShoppingBuilderState() {
+  const selectedCount = getSelectedRecipeSlugs().length;
+  const button = document.querySelector(".shopping-generate");
+  const count = document.querySelector(".shopping-count");
+
+  if (button) {
+    button.disabled = selectedCount === 0;
+    button.textContent = selectedCount
+      ? `skapa inköpslista (${selectedCount})`
+      : "välj recept först";
+  }
+
+  if (count) {
+    count.textContent = selectedCount
+      ? `${selectedCount} recept ${selectedCount === 1 ? "valt" : "valda"}`
+      : "inga recept valda";
+  }
+}
+
+function renderGeneratedShoppingList() {
+  const output = document.querySelector(".shopping-output");
+  if (!output) return;
+
+  const selectedSlugs = getSelectedRecipeSlugs();
+  saveGeneratedRecipeSlugs(selectedSlugs);
+  const items = aggregateShoppingItems(selectedSlugs);
+  const previousWrapper = output.querySelector(".ingredients-wrap");
+  previousWrapper?.remove();
+
+  const empty = output.querySelector(".shopping-empty");
+  if (!items.length) {
+    if (empty) empty.hidden = false;
+    return;
+  }
+
+  if (empty) empty.hidden = true;
+
+  const placeholder = document.createElement("pre");
+  placeholder.className = "ingredients-list";
+  output.append(placeholder);
+  const storageKey = generatedListChecksCacheKey(selectedSlugs);
+  const renderedList = renderIngredientList(items, storageKey);
+  wrapIngredientList(placeholder, renderedList, storageKey);
+  addDiscardGeneratedListControl(output.querySelector(".ingredients-wrap"), selectedSlugs);
+  refreshVisibleIngredientOrder();
+}
+
+function restoreGeneratedShoppingList() {
+  const savedSlugs = new Set(loadGeneratedRecipeSlugs());
+  if (!savedSlugs.size) return;
+
+  document.querySelectorAll(".recipe-select-input").forEach((checkbox) => {
+    checkbox.checked = savedSlugs.has(checkbox.dataset.recipeSlug);
+  });
+
+  updateShoppingBuilderState();
+  renderGeneratedShoppingList();
+}
+
+function addRecipeSelectionControls() {
+  document.querySelectorAll(".recipe").forEach((recipe) => {
+    if (recipe.querySelector(".recipe-select-field")) return;
+
+    const link = recipe.querySelector("h3 a");
+    const slug = recipeSlugFromLink(link);
+    if (!slug) return;
+
+    const label = document.createElement("label");
+    label.className = "recipe-select-field";
+    label.title = "Lägg till i inköpslistan";
+    label.innerHTML = `
+      <input class="recipe-select-input" type="checkbox" data-recipe-slug="${slug}">
+      <span class="recipe-select-box" aria-hidden="true"></span>
+    `;
+
+    recipe.prepend(label);
+  });
+}
+
+function renderIndexPage() {
+  const poster = document.querySelector(".poster");
+  if (!poster || document.querySelector(".recipe-detail")) return;
+
+  addRecipeSelectionControls();
+
+  if (!document.querySelector(".shopping-builder")) {
+    const section = document.createElement("section");
+    section.className = "shopping-builder";
+    section.setAttribute("aria-label", "Skapa inköpslista");
+    section.innerHTML = `
+      <div class="shopping-builder-inner">
+        <p class="vampiro shopping-title">inköpslistan</p>
+        <p class="shopping-count">inga recept valda</p>
+        <button class="shopping-generate" type="button" disabled>välj recept först</button>
+        <div class="shopping-output" aria-live="polite">
+          <p class="shopping-empty">välj några recept och skapa en stökfri lista</p>
+        </div>
+      </div>
+    `;
+    poster.append(section);
+
+    addStoreControls(section.querySelector(".shopping-builder-inner"), section.querySelector(".shopping-output"));
+    section.querySelector(".shopping-generate").addEventListener("click", renderGeneratedShoppingList);
+  }
+
+  document.querySelectorAll(".recipe-select-input").forEach((checkbox) => {
+    checkbox.addEventListener("change", updateShoppingBuilderState);
+  });
+
+  updateShoppingBuilderState();
+  restoreGeneratedShoppingList();
+}
+
+function addDiscardGeneratedListControl(wrapper, recipeSlugs) {
+  if (!wrapper) return;
+
+  const clearButton = wrapper.querySelector(".clear-ingredient-checks");
+  const actions = document.createElement("div");
+  actions.className = "generated-list-actions";
+
+  if (clearButton) {
+    wrapper.insertBefore(actions, clearButton);
+    actions.append(clearButton);
+  } else {
+    wrapper.append(actions);
+  }
+
+  const discardButton = document.createElement("button");
+  discardButton.className = "discard-generated-list";
+  discardButton.type = "button";
+  discardButton.textContent = "släng inköpslistan";
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "clear-checks-dialog";
+  dialog.innerHTML = `
+    <form method="dialog">
+      <p>nu raderar vi hela den här listan, oki?</p>
+      <div class="clear-checks-actions">
+        <button class="clear-checks-confirm" value="confirm">JA SLÄNG</button>
+        <button class="clear-checks-cancel" value="cancel">NEJ BEHÅLL</button>
+      </div>
+    </form>
+  `;
+
+  discardButton.addEventListener("click", () => {
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+      return;
+    }
+
+    if (window.confirm("nu raderar vi hela den här listan, oki?")) {
+      discardGeneratedList(wrapper, recipeSlugs);
+    }
+  });
+
+  dialog.addEventListener("close", () => {
+    if (dialog.returnValue === "confirm") {
+      discardGeneratedList(wrapper, recipeSlugs);
+    }
+  });
+
+  actions.append(discardButton);
+  wrapper.append(dialog);
+}
+
+function discardGeneratedList(wrapper, recipeSlugs) {
+  clearGeneratedListState(recipeSlugs);
+
+  document.querySelectorAll(".recipe-select-input:checked").forEach((checkbox) => {
+    checkbox.checked = false;
+  });
+
+  wrapper.remove();
+
+  const empty = document.querySelector(".shopping-empty");
+  if (empty) {
+    empty.hidden = false;
+  }
+
+  updateShoppingBuilderState();
 }
 
 function addMajsroraBox(detail) {
@@ -543,7 +836,7 @@ async function bootstrap() {
 
   try {
     const [recipeResponse, butikResponse] = await Promise.all([
-      loadSheet("recipe"),
+      loadSheet("recipe", "select A,B,C,D,E,F,G"),
       loadSheet("butik"),
     ]);
 
@@ -570,6 +863,7 @@ function applySpreadsheetData(recipeRows, butikRows, { source }) {
   state.storeRanks = parseButikSheet(butikRows);
 
   renderCurrentRecipePage(source);
+  renderIndexPage();
 }
 
 function renderCurrentRecipePage(source = "live") {

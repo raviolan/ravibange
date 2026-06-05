@@ -262,6 +262,47 @@ body {
   line-height: 1.15;
 }
 
+.recipe-select-field {
+  position: absolute;
+  left: calc(-27 * var(--scale));
+  top: calc(2 * var(--scale));
+  display: block;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.recipe-select-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.recipe-select-box {
+  display: grid;
+  place-items: center;
+  width: calc(18 * var(--scale));
+  height: calc(18 * var(--scale));
+  border: calc(2 * var(--scale)) solid currentColor;
+  background: var(--cream);
+}
+
+.recipe-select-input:checked + .recipe-select-box {
+  background: var(--yellow);
+}
+
+.recipe-select-input:checked + .recipe-select-box::after {
+  content: "✓";
+  color: var(--blue);
+  font: 700 calc(16 * var(--scale)) "Podkova", Georgia, serif;
+  line-height: 1;
+}
+
+.recipe-select-input:focus-visible + .recipe-select-box {
+  outline: calc(3 * var(--scale)) solid var(--yellow);
+  outline-offset: calc(2 * var(--scale));
+}
+
 .left h3 {
   color: #ffb738;
   font-size: calc(22.7 * var(--scale));
@@ -411,6 +452,81 @@ body {
   top: 65%;
 }
 
+.shopping-builder {
+  width: 92%;
+  margin: 0 3% calc(34 * var(--scale));
+  font-family: "Podkova", Georgia, serif;
+}
+
+.shopping-builder-inner {
+  padding: calc(22 * var(--scale));
+  background: var(--sky);
+  border: calc(2 * var(--scale)) solid var(--blue);
+}
+
+.shopping-title {
+  color: var(--yellow);
+  font-size: calc(43 * var(--scale));
+  text-shadow:
+    calc(1.4 * var(--scale)) calc(1.4 * var(--scale)) 0 var(--blue),
+    calc(-1 * var(--scale)) calc(1 * var(--scale)) 0 var(--blue);
+}
+
+.shopping-count {
+  margin: calc(8 * var(--scale)) 0 calc(12 * var(--scale));
+  color: var(--cream);
+  font-size: calc(20 * var(--scale));
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.shopping-generate {
+  min-height: calc(44 * var(--scale));
+  margin: 0 0 calc(22 * var(--scale));
+  padding: calc(8 * var(--scale)) calc(14 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  background: var(--yellow);
+  color: var(--blue);
+  cursor: pointer;
+  font: 700 calc(20 * var(--scale)) "Podkova", Georgia, serif;
+  text-transform: uppercase;
+}
+
+.shopping-generate:disabled {
+  cursor: not-allowed;
+  opacity: .54;
+}
+
+.shopping-builder .store-select-field,
+.shopping-builder .staples-toggle-field,
+.shopping-builder .ingredients-wrap,
+.shopping-builder .ingredients-list {
+  width: 100%;
+}
+
+.shopping-builder .store-select-field {
+  margin-bottom: calc(18 * var(--scale));
+  font-size: calc(38 * var(--scale));
+}
+
+.shopping-builder .staples-toggle-field {
+  margin: 0 0 calc(18 * var(--scale));
+}
+
+.shopping-output {
+  max-width: 620px;
+}
+
+.shopping-empty {
+  margin: 0;
+  color: var(--cream);
+  font-size: calc(22 * var(--scale));
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
 @media (min-width: 795px) {
   body {
     padding: 24px;
@@ -483,6 +599,17 @@ body {
   .left p {
     font-size: calc(20 * var(--scale));
     line-height: 1.08;
+  }
+
+  .recipe-select-field {
+    left: auto;
+    right: 0;
+    top: calc(-30 * var(--scale));
+  }
+
+  .recipe-select-box {
+    width: calc(28 * var(--scale));
+    height: calc(28 * var(--scale));
   }
 
   .dinner-title {
@@ -599,6 +726,32 @@ body {
   .m4 { top: 51.4%; }
   .m5 { top: 66.4%; }
   .m6 { top: 83%; }
+
+  .shopping-builder {
+    width: 90%;
+    margin: 0 5% calc(42 * var(--scale));
+  }
+
+  .shopping-builder-inner {
+    padding: calc(38 * var(--scale));
+  }
+
+  .shopping-title {
+    font-size: calc(64 * var(--scale));
+  }
+
+  .shopping-count {
+    font-size: calc(28 * var(--scale));
+  }
+
+  .shopping-generate {
+    min-height: calc(62 * var(--scale));
+    font-size: calc(28 * var(--scale));
+  }
+
+  .shopping-empty {
+    font-size: calc(28 * var(--scale));
+  }
 }
 
 .recipe-page {
@@ -1000,9 +1153,36 @@ body {
   text-transform: uppercase;
 }
 
+.generated-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.generated-list-actions .clear-ingredient-checks,
+.discard-generated-list {
+  width: max-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid rgb(52 73 116 / .72);
+  background: rgb(246 245 215 / .14);
+  color: var(--blue);
+  cursor: pointer;
+  font: 700 clamp(14px, 3.8vw, 18px) "Podkova", Georgia, serif;
+  text-transform: uppercase;
+}
+
 .clear-ingredient-checks:hover,
-.clear-ingredient-checks:focus-visible {
-  background: var(--cream);
+.clear-ingredient-checks:focus-visible,
+.generated-list-actions .clear-ingredient-checks:hover,
+.generated-list-actions .clear-ingredient-checks:focus-visible,
+.discard-generated-list:hover,
+.discard-generated-list:focus-visible {
+  background: var(--red);
+  color: var(--cream);
 }
 
 .clear-checks-dialog {

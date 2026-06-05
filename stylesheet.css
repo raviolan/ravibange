@@ -608,9 +608,9 @@ body {
   }
 
   .recipe-select-field {
-    left: auto;
-    right: 0;
-    top: calc(-30 * var(--scale));
+    left: calc(-38 * var(--scale));
+    right: auto;
+    top: calc(3 * var(--scale));
   }
 
   .recipe-select-box {
@@ -620,8 +620,9 @@ body {
   }
 
   .special-recipe .recipe-select-field {
-    right: calc(20 * var(--scale));
-    top: calc(-31 * var(--scale));
+    left: 20%;
+    right: auto;
+    top: calc(4 * var(--scale));
   }
 
   .dinner-title {
@@ -635,16 +636,16 @@ body {
   .rr2,
   .rr3,
   .rr4 {
-    left: 5%;
-    width: 90%;
+    left: 9%;
+    width: 86%;
   }
 
   .right h3 {
-    font-size: calc(38 * var(--scale));
+    font-size: calc(36 * var(--scale));
   }
 
   .right p {
-    font-size: calc(22 * var(--scale));
+    font-size: calc(21 * var(--scale));
     line-height: 1.08;
   }
 
@@ -690,19 +691,19 @@ body {
 
   .d1,
   .d2 {
-    left: 5%;
-    width: 66%;
+    left: 9%;
+    width: 62%;
   }
 
   .d1 { top: calc(2365 * var(--scale)); }
   .d2 { top: calc(2465 * var(--scale)); }
 
   .dessert h3 {
-    font-size: calc(38 * var(--scale));
+    font-size: calc(36 * var(--scale));
   }
 
   .dessert p {
-    font-size: calc(22 * var(--scale));
+    font-size: calc(21 * var(--scale));
     line-height: 1.08;
   }
 

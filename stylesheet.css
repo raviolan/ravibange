@@ -160,8 +160,9 @@ body {
 .plate {
   position: absolute;
   left: 52.2%;
-  top: 19.94%;
-  width: 19.3%;
+  top: 17.7%;
+  width: 15.8%;
+  transform: scaleX(-1) rotate(-7deg);
 }
 
 .panel {
@@ -456,8 +457,9 @@ body {
 
   .plate {
     left: 63%;
-    top: calc(1118 * var(--scale));
-    width: 32%;
+    top: calc(1074 * var(--scale));
+    width: 26%;
+    transform: scaleX(-1) rotate(-7deg);
   }
 
   .easy {

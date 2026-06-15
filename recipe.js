@@ -736,6 +736,14 @@ function renderIndexPage() {
         <p class="vampiro shopping-title">inköpslistan</p>
         <p class="shopping-count">inga recept valda</p>
         <button class="shopping-generate" type="button" disabled>välj recept först</button>
+        <p class="shared-shopping-status" data-shared-shopping-message aria-live="polite"></p>
+        <form class="shared-shopping-form" data-shared-form>
+          <label>
+            <span>Lägg till själv</span>
+            <input data-shared-input autocomplete="off">
+          </label>
+          <button type="submit" data-shared-add>lägg till</button>
+        </form>
         <div class="shopping-output" aria-live="polite">
           <p class="shopping-empty">välj några recept och skapa en stökfri lista</p>
         </div>
@@ -809,6 +817,9 @@ function addDiscardGeneratedListControl(wrapper, recipeSlugs) {
 }
 
 function discardGeneratedList(wrapper, recipeSlugs) {
+  document.dispatchEvent(new CustomEvent("ravibange:generated-shopping-list-discarded", {
+    detail: { items: generatedShoppingItems() },
+  }));
   clearGeneratedListState(recipeSlugs);
 
   document.querySelectorAll(".recipe-select-input:checked").forEach((checkbox) => {
@@ -945,8 +956,10 @@ function addClearChecksControl(wrapper) {
 function clearIngredientChecks(wrapper) {
   const storageKey = wrapper.dataset.checksStorageKey;
   wrapper.querySelectorAll(".ingredient-check:checked").forEach((checkbox) => {
+    const row = checkbox.closest(".ingredient-row");
     checkbox.checked = false;
-    checkbox.closest(".ingredient-row")?.classList.remove("is-checked");
+    row?.classList.remove("is-checked");
+    if (row) publishGeneratedShoppingItemToggle(row);
   });
   if (storageKey) {
     saveCheckedIngredientKeys(storageKey, new Set());

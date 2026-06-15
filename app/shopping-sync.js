@@ -13,7 +13,6 @@ import { getIdentity } from "./identity.js";
 const POLL_INTERVAL_MS = 10000;
 const DEFAULT_LIST_TITLE = "Delad inköpslista";
 
-const root = document.querySelector("[data-synced-shopping]");
 const state = {
   identity: null,
   listId: null,
@@ -27,6 +26,10 @@ const state = {
   pendingItemIds: new Set(),
   initRequestId: 0,
 };
+
+function sharedRoot() {
+  return document.querySelector(".shopping-builder");
+}
 
 function normalizeItemText(value) {
   return String(value || "")
@@ -42,16 +45,16 @@ function itemByText(text) {
 }
 
 function setMessage(message) {
-  const target = root?.querySelector("[data-synced-message]");
+  const target = document.querySelector("[data-shared-shopping-message]");
   if (target) target.textContent = message;
 }
 
 function setStatus(status, message) {
   state.status = status;
-  root?.setAttribute("data-sync-status", status);
+  sharedRoot()?.setAttribute("data-sync-status", status);
   setMessage(message);
   updateControls();
-  renderItems();
+  publishSharedItems();
 }
 
 function canEdit() {
@@ -59,60 +62,26 @@ function canEdit() {
 }
 
 function updateControls() {
-  root?.querySelectorAll("[data-synced-add], [data-synced-input]").forEach((control) => {
+  document.querySelectorAll("[data-shared-add], [data-shared-input]").forEach((control) => {
     control.disabled = !canEdit();
   });
+}
+
+function bindSharedForm() {
+  if (state.formBound) return;
+
+  const form = document.querySelector("[data-shared-form]");
+  if (!form) return;
+
+  form.addEventListener("submit", addItem);
+  state.formBound = true;
+  updateControls();
 }
 
 function sortedItems() {
   return [...state.items.values()]
     .filter((item) => !item.deleted_at)
     .sort((a, b) => Number(a.checked) - Number(b.checked) || a.created_at.localeCompare(b.created_at));
-}
-
-function renderItems() {
-  const list = root?.querySelector("[data-synced-items]");
-  if (!list) return;
-
-  list.replaceChildren();
-
-  const items = sortedItems();
-  if (!items.length) {
-    const empty = document.createElement("li");
-    empty.className = "synced-shopping-empty";
-    empty.textContent = emptyText();
-    list.append(empty);
-    return;
-  }
-
-  for (const item of items) {
-    const row = document.createElement("li");
-    row.className = "synced-shopping-item";
-    row.classList.toggle("is-checked", item.checked);
-    row.classList.toggle("is-pending", state.pendingItemIds.has(item.id));
-
-    const label = document.createElement("label");
-    label.className = "synced-shopping-check";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = item.checked;
-    checkbox.disabled = state.pendingItemIds.has(item.id);
-    checkbox.addEventListener("change", () => toggleItem(item.id, checkbox.checked));
-
-    const text = document.createElement("span");
-    text.textContent = item.text;
-
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.textContent = "ta bort";
-    remove.disabled = state.pendingItemIds.has(item.id);
-    remove.addEventListener("click", () => removeItem(item.id));
-
-    label.append(checkbox, text);
-    row.append(label, remove);
-    list.append(row);
-  }
 }
 
 function publishSharedItems({ deletedItems = [] } = {}) {
@@ -123,14 +92,6 @@ function publishSharedItems({ deletedItems = [] } = {}) {
       ready: state.status === "ready",
     },
   }));
-}
-
-function emptyText() {
-  if (state.status === "loading") return "hämtar listan...";
-  if (state.status === "offline") return "delad lista är offline";
-  if (state.status === "no-household") return "väntar på hushåll";
-  if (state.status === "error") return "kunde inte visa listan";
-  return "inget här än";
 }
 
 function mergeItems(items, { fromPoll = false } = {}) {
@@ -154,7 +115,6 @@ function mergeItems(items, { fromPoll = false } = {}) {
 
     state.items.set(item.id, item);
   }
-  renderItems();
   publishSharedItems({ deletedItems });
 }
 
@@ -211,7 +171,9 @@ async function pollChanges() {
 
 async function addItem(event) {
   event.preventDefault();
-  const input = root.querySelector("[data-synced-input]");
+  const input = document.querySelector("[data-shared-input]");
+  if (!input) return;
+
   const text = input.value.trim();
   if (!text || !canEdit()) return;
 
@@ -267,7 +229,7 @@ async function toggleItem(itemId, checked) {
 
   state.pendingItemIds.add(itemId);
   state.items.set(itemId, { ...current, checked });
-  renderItems();
+  publishSharedItems();
 
   try {
     const response = await updateShoppingItem(itemId, { checked });
@@ -276,11 +238,11 @@ async function toggleItem(itemId, checked) {
     setMessage("synkad");
   } catch {
     state.items.set(itemId, current);
-    renderItems();
+    publishSharedItems();
     setMessage("kunde inte uppdatera just nu");
   } finally {
     state.pendingItemIds.delete(itemId);
-    renderItems();
+    publishSharedItems();
   }
 }
 
@@ -300,7 +262,7 @@ async function removeItem(itemId) {
 
   state.pendingItemIds.add(itemId);
   state.items.delete(itemId);
-  renderItems();
+  publishSharedItems();
 
   try {
     const response = await deleteShoppingItem(itemId);
@@ -308,11 +270,29 @@ async function removeItem(itemId) {
     publishSharedItems({ deletedItems: [response.shopping_item] });
   } catch {
     state.items.set(itemId, current);
-    renderItems();
+    publishSharedItems();
     setMessage("kunde inte ta bort just nu");
   } finally {
     state.pendingItemIds.delete(itemId);
-    renderItems();
+    publishSharedItems();
+  }
+}
+
+async function deleteSharedItemText(text) {
+  const existing = itemByText(text);
+  if (!existing) return;
+
+  await removeItem(existing.id);
+}
+
+async function deleteGeneratedItems(items) {
+  for (const item of items || []) {
+    try {
+      await deleteSharedItemText(item?.text);
+    } catch {
+      setMessage("kunde inte slänga hela delade listan just nu");
+      return;
+    }
   }
 }
 
@@ -333,7 +313,6 @@ async function importGeneratedItems(items) {
 }
 
 async function init() {
-  if (!root) return;
   const requestId = state.initRequestId + 1;
   state.initRequestId = requestId;
 
@@ -351,10 +330,7 @@ async function init() {
     return;
   }
 
-  if (!state.formBound) {
-    root.querySelector("[data-synced-form]")?.addEventListener("submit", addItem);
-    state.formBound = true;
-  }
+  bindSharedForm();
 
   state.listId = null;
   state.items.clear();
@@ -387,7 +363,9 @@ document.addEventListener("ravibange:identity-changed", () => {
 init();
 
 document.addEventListener("ravibange:generated-shopping-list-rendered", (event) => {
-  importGeneratedItems(event.detail?.items || []);
+  importGeneratedItems(event.detail?.items || []).finally(() => {
+    publishSharedItems();
+  });
 });
 
 document.addEventListener("ravibange:generated-shopping-item-toggled", (event) => {
@@ -396,6 +374,12 @@ document.addEventListener("ravibange:generated-shopping-item-toggled", (event) =
   });
 });
 
+document.addEventListener("ravibange:generated-shopping-list-discarded", (event) => {
+  deleteGeneratedItems(event.detail?.items || []);
+});
+
 document.addEventListener("ravibange:generated-shopping-ui-ready", () => {
+  bindSharedForm();
+  updateControls();
   publishSharedItems();
 });

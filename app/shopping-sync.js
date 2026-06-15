@@ -44,6 +44,14 @@ function itemByText(text) {
   return [...state.items.values()].find((item) => normalizeItemText(item.text) === key && !item.deleted_at) || null;
 }
 
+function itemMetadataMatches(item, metadata) {
+  return item
+    && item.hint === metadata.hint
+    && item.section === metadata.section
+    && item.alternativ === metadata.alternativ
+    && item.found_in === metadata.found_in;
+}
+
 function itemById(itemId) {
   return state.items.get(itemId) || null;
 }
@@ -202,14 +210,15 @@ async function addItem(event) {
   }
 }
 
-async function addSharedItemText(text, { checked = false, found_in = "" } = {}) {
+async function addSharedItemText(text, { checked = false, hint = "", section = "", alternativ = "", found_in = "" } = {}) {
   const cleanText = String(text || "").trim();
   if (!cleanText || !state.listId) return null;
 
   const existing = itemByText(cleanText);
   if (existing) {
-    if (found_in && existing.found_in !== found_in) {
-      const response = await updateShoppingItem(existing.id, { found_in });
+    const metadata = { hint, section, alternativ, found_in };
+    if (!itemMetadataMatches(existing, metadata)) {
+      const response = await updateShoppingItem(existing.id, metadata);
       mergeItems([response.shopping_item]);
       state.lastSyncAt = response.shopping_item.updated_at;
     }
@@ -223,6 +232,9 @@ async function addSharedItemText(text, { checked = false, found_in = "" } = {}) 
   const response = await createShoppingItem(state.listId, {
     text: cleanText,
     created_by: state.identity?.userId || null,
+    hint,
+    section,
+    alternativ,
     found_in,
   });
   mergeItems([response.shopping_item]);
@@ -318,6 +330,9 @@ async function importGeneratedItems(items) {
     try {
       await addSharedItemText(text, {
         checked: Boolean(item.checked),
+        hint: item.hint || "",
+        section: item.section || "",
+        alternativ: item.alternativ || "",
         found_in: item.found_in || "manuellt inmatad",
       });
     } catch {

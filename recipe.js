@@ -469,6 +469,9 @@ function renderIngredientList(ingredients, storageKey) {
     row.className = "ingredient-row";
     row.dataset.notes = ingredient.notes;
     row.dataset.section = ingredient.section;
+    row.dataset.hint = ingredient.hint || "";
+    row.dataset.alternativ = ingredient.alternativ || "";
+    row.dataset.foundIn = ingredient.foundIn || "";
     row.dataset.checkKey = checkKey;
 
     const rowHeader = document.createElement("div");
@@ -530,7 +533,7 @@ function sharedItemFromRow(row) {
     notes: row.dataset.notes || "",
     alternativ: row.dataset.alternativ || "",
     foundIn: row.dataset.foundIn || "",
-    sharedItem: row.dataset.sharedItem === "true",
+    sharedItem: row.dataset.sharedItem === "true" || Boolean(row.dataset.sharedItemId),
   };
 }
 
@@ -640,7 +643,10 @@ function generatedShoppingItems() {
     .map((row) => ({
       text: rowGeneratedItemText(row),
       checked: row.querySelector(".ingredient-check")?.checked || false,
-      found_in: foundInText(sharedItemFromRow(row), row),
+      hint: row.dataset.hint || "",
+      section: row.dataset.section || "",
+      alternativ: row.dataset.alternativ || "",
+      found_in: row.dataset.foundIn || foundInText(sharedItemFromRow(row), row),
     }))
     .filter((item) => item.text);
 }
@@ -682,10 +688,9 @@ function applySharedShoppingItems(items) {
     const key = normalizedGeneratedItemText(text);
     const existingRow = rowsByText.get(key);
     if (existingRow) {
+      existingRow.dataset.sharedItem = "true";
       existingRow.dataset.sharedItemId = item.id;
-      if (existingRow.dataset.sharedItem === "true") {
-        applySharedRowMetadata(existingRow, item);
-      }
+      applySharedRowMetadata(existingRow, item);
       syncGeneratedRowChecked(existingRow, Boolean(item.checked));
       continue;
     }
@@ -804,6 +809,8 @@ function aggregateShoppingItems(recipeSlugs) {
       if (Number.isFinite(item.amountPerRecipe)) {
         group.totalAmount += item.amountPerRecipe;
       }
+
+      group.item.foundIn = recipeNamesForIngredient(item.name).join(", ");
     }
   }
 

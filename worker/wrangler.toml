@@ -5,5 +5,5 @@ compatibility_date = "2026-06-15"
 [[d1_databases]]
 binding = "DB"
 database_name = "ravibange-kitchen"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "38f6f201-7e22-49b8-9fcf-226cf8370d4a"
 migrations_dir = "migrations"

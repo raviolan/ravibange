@@ -1,5 +1,5 @@
 const DEFAULT_LOCAL_API_BASE_URL = "http://127.0.0.1:8787";
-const DEPLOYED_API_BASE_URL = "";
+const DEPLOYED_API_BASE_URL = "https://ravibange-kitchen-api.pink-void.workers.dev";
 
 export class ApiError extends Error {
   constructor(message, { status = 0 } = {}) {

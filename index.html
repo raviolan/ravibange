@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f5d7">
   <title>Ravibange Kitchen</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Passion+One&family=Podkova:wght@400;700&family=Sigmar+One&family=Vampiro+One&display=swap" rel="stylesheet">
@@ -122,7 +125,82 @@
         </article>
       </div>
     </section>
+
+    <section class="household-card" data-household-setup aria-label="Household setup">
+      <div class="household-card-inner">
+        <div class="household-card-header">
+          <p class="vampiro household-title">hushållet</p>
+          <p class="household-status" data-household-status></p>
+        </div>
+
+        <div data-household-setup-panel>
+          <div class="household-forms">
+            <form class="household-form" data-create-household-form>
+              <h2>Skapa hemma</h2>
+              <label>
+                <span>Ditt namn</span>
+                <input name="display-name" autocomplete="name" required>
+              </label>
+              <label>
+                <span>Hushåll</span>
+                <input name="household-name" required>
+              </label>
+              <button type="submit">skapa kod</button>
+            </form>
+
+            <form class="household-form" data-join-household-form>
+              <h2>Gå med kod</h2>
+              <label>
+                <span>Ditt namn</span>
+                <input name="join-display-name" autocomplete="name" required>
+              </label>
+              <label>
+                <span>Invite code</span>
+                <input name="invite-code" autocapitalize="characters" required>
+              </label>
+              <button type="submit">gå med</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="household-active" data-household-active-panel hidden>
+          <p class="household-name" data-household-name></p>
+          <p class="household-code">invite code <strong data-household-invite-code></strong></p>
+          <form class="household-name-form" data-display-name-form>
+            <label>
+              <span>Display name</span>
+              <input name="current-display-name" autocomplete="name" required>
+            </label>
+            <button type="submit">byt namn</button>
+          </form>
+          <button class="household-clear" type="button" data-clear-household>glöm lokalt hushåll</button>
+          <p class="household-device">device <span data-household-device></span></p>
+        </div>
+
+        <p class="household-message" data-household-message aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="synced-shopping" data-synced-shopping aria-label="Delad inköpslista">
+      <div class="synced-shopping-inner">
+        <div class="synced-shopping-header">
+          <p class="vampiro synced-shopping-title">Delad inköpslista</p>
+          <p class="synced-shopping-message" data-synced-message aria-live="polite"></p>
+        </div>
+        <form class="synced-shopping-form" data-synced-form>
+          <label>
+            <span>Lägg till</span>
+            <input data-synced-input autocomplete="off">
+          </label>
+          <button type="submit" data-synced-add>lägg till</button>
+        </form>
+        <ul class="synced-shopping-items" data-synced-items></ul>
+      </div>
+    </section>
   </main>
   <script src="recipe.js"></script>
+  <script type="module" src="app/pwa.js"></script>
+  <script type="module" src="app/household.js"></script>
+  <script type="module" src="app/shopping-sync.js"></script>
 </body>
 </html>

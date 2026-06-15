@@ -77,6 +77,9 @@ function canonicalAvdelning(value) {
   if (normalized === "veggie" || normalized === "veggies" || normalized.startsWith("gronsaker")) {
     return "grönsaker";
   }
+  if (normalized === "bland kryddorna" || normalized === "krydda") {
+    return "kryddor";
+  }
   if (normalized === "generell") {
     return "generell";
   }
@@ -332,7 +335,7 @@ function currentRecipeSlug() {
 
 function rankForStore(row, store) {
   const section = sectionRankKey(row.dataset.section);
-  const rankMap = state.storeRanks[store];
+  const rankMap = state.storeRanks[store] || state.storeRanks[groceryStores[0]];
   if (!rankMap || !section) return Number.POSITIVE_INFINITY;
   return rankMap[section] ?? Number.POSITIVE_INFINITY;
 }

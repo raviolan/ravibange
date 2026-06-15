@@ -533,6 +533,296 @@ body {
   text-transform: uppercase;
 }
 
+.household-card {
+  width: 92%;
+  margin: 0 3% calc(34 * var(--scale));
+  font-family: "Podkova", Georgia, serif;
+}
+
+.household-card-inner {
+  padding: calc(22 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  background: var(--yellow);
+  color: var(--blue);
+}
+
+.household-card-header {
+  display: grid;
+  gap: calc(6 * var(--scale));
+  margin-bottom: calc(18 * var(--scale));
+}
+
+.household-title {
+  color: var(--red);
+  font-size: calc(43 * var(--scale));
+  text-shadow:
+    calc(1.2 * var(--scale)) calc(1.2 * var(--scale)) 0 var(--cream),
+    calc(-.8 * var(--scale)) calc(.8 * var(--scale)) 0 var(--cream);
+}
+
+.household-status,
+.household-message,
+.household-code,
+.household-device,
+.household-name {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.household-status {
+  font-size: calc(20 * var(--scale));
+}
+
+.household-forms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(18 * var(--scale));
+}
+
+.household-form,
+.household-name-form {
+  display: grid;
+  gap: calc(12 * var(--scale));
+}
+
+.household-form h2 {
+  margin: 0;
+  color: var(--blue);
+  font-family: "Passion One", Impact, sans-serif;
+  font-size: calc(36 * var(--scale));
+  font-weight: 400;
+  line-height: .9;
+  text-transform: uppercase;
+}
+
+.household-form label,
+.household-name-form label {
+  display: grid;
+  gap: calc(5 * var(--scale));
+  font-size: calc(16 * var(--scale));
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.household-form input,
+.household-name-form input {
+  width: 100%;
+  min-height: calc(42 * var(--scale));
+  padding: calc(8 * var(--scale)) calc(10 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  border-radius: 0;
+  background: var(--cream);
+  color: var(--blue);
+  font: 700 calc(18 * var(--scale)) "Podkova", Georgia, serif;
+}
+
+.household-form button,
+.household-name-form button,
+.household-clear {
+  min-height: calc(42 * var(--scale));
+  padding: calc(8 * var(--scale)) calc(12 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  background: var(--red);
+  color: var(--cream);
+  cursor: pointer;
+  font: 700 calc(18 * var(--scale)) "Podkova", Georgia, serif;
+  text-transform: uppercase;
+}
+
+.household-form button:focus-visible,
+.household-name-form button:focus-visible,
+.household-clear:focus-visible,
+.household-form input:focus-visible,
+.household-name-form input:focus-visible {
+  outline: calc(3 * var(--scale)) solid var(--sky);
+  outline-offset: calc(2 * var(--scale));
+}
+
+.household-active {
+  display: grid;
+  gap: calc(14 * var(--scale));
+  max-width: 620px;
+}
+
+.household-active[hidden] {
+  display: none;
+}
+
+.household-code strong {
+  display: inline-block;
+  padding: calc(4 * var(--scale)) calc(8 * var(--scale));
+  background: var(--cream);
+  border: calc(2 * var(--scale)) solid var(--blue);
+  letter-spacing: .08em;
+}
+
+.household-clear {
+  width: fit-content;
+  background: var(--blue);
+}
+
+.household-device {
+  max-width: 100%;
+  font-size: calc(12 * var(--scale));
+  opacity: .72;
+  overflow-wrap: anywhere;
+}
+
+.household-message {
+  min-height: calc(20 * var(--scale));
+  margin-top: calc(16 * var(--scale));
+  color: var(--red);
+  font-size: calc(16 * var(--scale));
+}
+
+.synced-shopping {
+  width: 92%;
+  margin: 0 3% calc(34 * var(--scale));
+  font-family: "Podkova", Georgia, serif;
+}
+
+.synced-shopping-inner {
+  padding: calc(22 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  background: var(--cream);
+  color: var(--blue);
+}
+
+.synced-shopping-header {
+  display: grid;
+  gap: calc(6 * var(--scale));
+  margin-bottom: calc(18 * var(--scale));
+}
+
+.synced-shopping-title {
+  color: var(--sky);
+  font-size: calc(43 * var(--scale));
+  text-shadow:
+    calc(1.2 * var(--scale)) calc(1.2 * var(--scale)) 0 var(--blue),
+    calc(-.8 * var(--scale)) calc(.8 * var(--scale)) 0 var(--blue);
+}
+
+.synced-shopping-message,
+.synced-shopping-empty {
+  margin: 0;
+  color: var(--red);
+  font-size: calc(16 * var(--scale));
+  font-weight: 700;
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.synced-shopping-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: calc(10 * var(--scale));
+  align-items: end;
+  margin-bottom: calc(18 * var(--scale));
+}
+
+.synced-shopping-form label {
+  display: grid;
+  gap: calc(5 * var(--scale));
+  font-size: calc(16 * var(--scale));
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.synced-shopping-form input {
+  width: 100%;
+  min-height: calc(42 * var(--scale));
+  padding: calc(8 * var(--scale)) calc(10 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  border-radius: 0;
+  background: white;
+  color: var(--blue);
+  font: 700 calc(18 * var(--scale)) "Podkova", Georgia, serif;
+}
+
+.synced-shopping-form button,
+.synced-shopping-item button {
+  min-height: calc(42 * var(--scale));
+  padding: calc(8 * var(--scale)) calc(12 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  background: var(--yellow);
+  color: var(--blue);
+  cursor: pointer;
+  font: 700 calc(18 * var(--scale)) "Podkova", Georgia, serif;
+  text-transform: uppercase;
+}
+
+.synced-shopping-form button:disabled,
+.synced-shopping-form input:disabled,
+.synced-shopping-item button:disabled,
+.synced-shopping-check input:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.synced-shopping-form input:focus-visible,
+.synced-shopping-form button:focus-visible,
+.synced-shopping-check input:focus-visible,
+.synced-shopping-item button:focus-visible {
+  outline: calc(3 * var(--scale)) solid var(--red);
+  outline-offset: calc(2 * var(--scale));
+}
+
+.synced-shopping-items {
+  display: grid;
+  gap: calc(8 * var(--scale));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.synced-shopping-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: calc(10 * var(--scale));
+  align-items: center;
+  padding: calc(8 * var(--scale));
+  border: calc(2 * var(--scale)) solid var(--blue);
+  background: var(--sky);
+}
+
+.synced-shopping-item.is-checked {
+  opacity: .68;
+}
+
+.synced-shopping-item.is-pending {
+  opacity: .78;
+}
+
+.synced-shopping-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: calc(10 * var(--scale));
+  align-items: center;
+  color: var(--cream);
+  font-size: calc(20 * var(--scale));
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.synced-shopping-check span {
+  overflow-wrap: anywhere;
+}
+
+.synced-shopping-check input {
+  width: calc(22 * var(--scale));
+  height: calc(22 * var(--scale));
+  accent-color: var(--yellow);
+}
+
+.synced-shopping-item.is-checked span {
+  text-decoration: line-through;
+  text-decoration-thickness: .08em;
+}
+
 @media (min-width: 795px) {
   body {
     padding: 24px;
@@ -764,6 +1054,90 @@ body {
 
   .shopping-empty {
     font-size: calc(28 * var(--scale));
+  }
+
+  .household-card {
+    width: 90%;
+    margin: 0 5% calc(42 * var(--scale));
+  }
+
+  .household-card-inner {
+    padding: calc(30 * var(--scale));
+  }
+
+  .household-title {
+    font-size: calc(64 * var(--scale));
+  }
+
+  .household-status {
+    font-size: calc(28 * var(--scale));
+  }
+
+  .household-forms {
+    grid-template-columns: 1fr;
+    gap: calc(30 * var(--scale));
+  }
+
+  .household-form h2 {
+    font-size: calc(48 * var(--scale));
+  }
+
+  .household-form label,
+  .household-name-form label,
+  .household-message {
+    font-size: calc(22 * var(--scale));
+  }
+
+  .household-form input,
+  .household-name-form input,
+  .household-form button,
+  .household-name-form button,
+  .household-clear {
+    min-height: calc(58 * var(--scale));
+    font-size: calc(24 * var(--scale));
+  }
+
+  .synced-shopping {
+    width: 90%;
+    margin: 0 5% calc(42 * var(--scale));
+  }
+
+  .synced-shopping-inner {
+    padding: calc(30 * var(--scale));
+  }
+
+  .synced-shopping-title {
+    font-size: calc(58 * var(--scale));
+  }
+
+  .synced-shopping-form {
+    grid-template-columns: 1fr;
+  }
+
+  .synced-shopping-message,
+  .synced-shopping-empty,
+  .synced-shopping-form label {
+    font-size: calc(22 * var(--scale));
+  }
+
+  .synced-shopping-form input,
+  .synced-shopping-form button,
+  .synced-shopping-item button {
+    min-height: calc(58 * var(--scale));
+    font-size: calc(24 * var(--scale));
+  }
+
+  .synced-shopping-item {
+    grid-template-columns: 1fr;
+  }
+
+  .synced-shopping-check {
+    font-size: calc(26 * var(--scale));
+  }
+
+  .synced-shopping-check input {
+    width: calc(30 * var(--scale));
+    height: calc(30 * var(--scale));
   }
 }
 

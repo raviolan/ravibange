@@ -23,6 +23,7 @@ const CACHE_KEY = "ravibange_spreadsheet_cache_v2";
 const INGREDIENT_CHECKS_CACHE_PREFIX = "ravibange_ingredient_checks_v1";
 const GENERATED_LIST_CHECKS_CACHE_PREFIX = "ravibange_generated_ingredient_checks_v1";
 const GENERATED_LIST_RECIPES_CACHE_KEY = "ravibange_generated_recipe_slugs_v1";
+const SHARED_GENERATED_LIST_STORAGE_KEY = "ravibange_shared_generated_ingredient_checks_v1";
 
 function loadSheet(sheetName, query = "select A,B,C,D,E,F") {
   return new Promise((resolve, reject) => {
@@ -450,6 +451,7 @@ function renderIngredientList(ingredients, storageKey) {
         checkedKeys.delete(checkKey);
       }
       saveCheckedIngredientKeys(storageKey, checkedKeys);
+      publishGeneratedShoppingItemToggle(row);
     });
 
     rowHeader.append(checkbox, toggle);
@@ -458,6 +460,135 @@ function renderIngredientList(ingredients, storageKey) {
   });
 
   return ul;
+}
+
+function normalizedGeneratedItemText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function rowGeneratedItemText(row) {
+  return row.querySelector(".ingredient-name")?.textContent.trim() || "";
+}
+
+function generatedShoppingWrapper() {
+  return document.querySelector(".shopping-output .ingredients-wrap");
+}
+
+function generatedShoppingRows() {
+  return [...(generatedShoppingWrapper()?.querySelectorAll(".ingredient-row") || [])];
+}
+
+function generatedShoppingItems() {
+  return generatedShoppingRows()
+    .map((row) => ({
+      text: rowGeneratedItemText(row),
+      checked: row.querySelector(".ingredient-check")?.checked || false,
+    }))
+    .filter((item) => item.text);
+}
+
+function publishGeneratedShoppingList() {
+  const items = generatedShoppingItems();
+  if (!items.length) return;
+
+  document.dispatchEvent(new CustomEvent("ravibange:generated-shopping-list-rendered", {
+    detail: { items },
+  }));
+}
+
+function publishGeneratedShoppingItemToggle(row) {
+  if (!row.closest(".shopping-output")) return;
+
+  document.dispatchEvent(new CustomEvent("ravibange:generated-shopping-item-toggled", {
+    detail: {
+      text: rowGeneratedItemText(row),
+      checked: row.querySelector(".ingredient-check")?.checked || false,
+    },
+  }));
+}
+
+function applySharedShoppingItems(items) {
+  const wrapper = generatedShoppingWrapper() || createSharedGeneratedShoppingList(items);
+  const list = wrapper?.querySelector(".ingredient-items");
+  if (!wrapper || !list) return;
+
+  const rowsByText = new Map();
+  generatedShoppingRows().forEach((row) => {
+    rowsByText.set(normalizedGeneratedItemText(rowGeneratedItemText(row)), row);
+  });
+
+  for (const item of items || []) {
+    const text = String(item?.text || "").trim();
+    if (!text || item.deleted_at) continue;
+
+    const key = normalizedGeneratedItemText(text);
+    const existingRow = rowsByText.get(key);
+    if (existingRow) {
+      existingRow.dataset.sharedItemId = item.id;
+      syncGeneratedRowChecked(existingRow, Boolean(item.checked));
+      continue;
+    }
+
+    const storageKey = wrapper.dataset.checksStorageKey || "";
+    const rendered = renderIngredientList([
+      {
+        name: text,
+        hint: "Delad lista",
+        section: "",
+        notes: "",
+        alternativ: "",
+        totalAmount: null,
+      },
+    ], storageKey);
+    const row = rendered.querySelector(".ingredient-row");
+    if (!row) continue;
+
+    row.dataset.sharedItem = "true";
+    row.dataset.sharedItemId = item.id;
+    syncGeneratedRowChecked(row, Boolean(item.checked));
+    list.append(row);
+    rowsByText.set(key, row);
+  }
+}
+
+function createSharedGeneratedShoppingList(items) {
+  if (!items?.length) return null;
+
+  const output = document.querySelector(".shopping-output");
+  if (!output) return null;
+
+  const empty = output.querySelector(".shopping-empty");
+  if (empty) empty.hidden = true;
+
+  const placeholder = document.createElement("pre");
+  placeholder.className = "ingredients-list";
+  output.append(placeholder);
+
+  const renderedList = renderIngredientList([], SHARED_GENERATED_LIST_STORAGE_KEY);
+  wrapIngredientList(placeholder, renderedList, SHARED_GENERATED_LIST_STORAGE_KEY);
+  return output.querySelector(".ingredients-wrap");
+}
+
+function removeSharedShoppingItems(items) {
+  const wrapper = generatedShoppingWrapper();
+  if (!wrapper) return;
+
+  for (const item of items || []) {
+    const row = wrapper.querySelector(`[data-shared-item-id="${CSS.escape(item.id)}"]`);
+    row?.remove();
+  }
+}
+
+function syncGeneratedRowChecked(row, checked) {
+  const checkbox = row.querySelector(".ingredient-check");
+  if (!checkbox || checkbox.checked === checked) return;
+
+  checkbox.checked = checked;
+  row.classList.toggle("is-checked", checked);
 }
 
 function recipeSlugFromLink(link) {
@@ -555,6 +686,7 @@ function renderGeneratedShoppingList() {
   wrapIngredientList(placeholder, renderedList, storageKey);
   addDiscardGeneratedListControl(output.querySelector(".ingredients-wrap"), selectedSlugs);
   refreshVisibleIngredientOrder();
+  publishGeneratedShoppingList();
 }
 
 function restoreGeneratedShoppingList() {
@@ -621,6 +753,7 @@ function renderIndexPage() {
 
   updateShoppingBuilderState();
   restoreGeneratedShoppingList();
+  document.dispatchEvent(new CustomEvent("ravibange:generated-shopping-ui-ready"));
 }
 
 function addDiscardGeneratedListControl(wrapper, recipeSlugs) {
@@ -910,4 +1043,13 @@ bootstrap().catch((error) => {
     `;
   }
   console.error(error);
+});
+
+document.addEventListener("ravibange:shared-shopping-items-changed", (event) => {
+  removeSharedShoppingItems(event.detail?.deletedItems || []);
+  applySharedShoppingItems(event.detail?.items || []);
+});
+
+document.addEventListener("ravibange:shared-shopping-ready", () => {
+  publishGeneratedShoppingList();
 });

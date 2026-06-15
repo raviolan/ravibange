@@ -28,6 +28,19 @@ const state = {
   initRequestId: 0,
 };
 
+function normalizeItemText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function itemByText(text) {
+  const key = normalizeItemText(text);
+  return [...state.items.values()].find((item) => normalizeItemText(item.text) === key && !item.deleted_at) || null;
+}
+
 function setMessage(message) {
   const target = root?.querySelector("[data-synced-message]");
   if (target) target.textContent = message;
@@ -102,6 +115,16 @@ function renderItems() {
   }
 }
 
+function publishSharedItems({ deletedItems = [] } = {}) {
+  document.dispatchEvent(new CustomEvent("ravibange:shared-shopping-items-changed", {
+    detail: {
+      items: sortedItems(),
+      deletedItems,
+      ready: state.status === "ready",
+    },
+  }));
+}
+
 function emptyText() {
   if (state.status === "loading") return "hämtar listan...";
   if (state.status === "offline") return "delad lista är offline";
@@ -111,6 +134,8 @@ function emptyText() {
 }
 
 function mergeItems(items, { fromPoll = false } = {}) {
+  const deletedItems = [];
+
   for (const item of items) {
     if (fromPoll && state.pendingItemIds.has(item.id)) {
       continue;
@@ -123,12 +148,14 @@ function mergeItems(items, { fromPoll = false } = {}) {
 
     if (item.deleted_at) {
       state.items.delete(item.id);
+      deletedItems.push(item);
       continue;
     }
 
     state.items.set(item.id, item);
   }
   renderItems();
+  publishSharedItems({ deletedItems });
 }
 
 async function ensureDefaultList() {
@@ -208,6 +235,32 @@ async function addItem(event) {
   }
 }
 
+async function addSharedItemText(text, { checked = false } = {}) {
+  const cleanText = String(text || "").trim();
+  if (!cleanText || !state.listId) return null;
+
+  const existing = itemByText(cleanText);
+  if (existing) {
+    if (existing.checked !== checked) {
+      return toggleItem(existing.id, checked);
+    }
+    return existing;
+  }
+
+  const response = await createShoppingItem(state.listId, {
+    text: cleanText,
+    created_by: state.identity?.userId || null,
+  });
+  mergeItems([response.shopping_item]);
+  state.lastSyncAt = response.shopping_item.updated_at;
+
+  if (checked) {
+    await toggleItem(response.shopping_item.id, true);
+  }
+
+  return response.shopping_item;
+}
+
 async function toggleItem(itemId, checked) {
   const current = state.items.get(itemId);
   if (!current || state.pendingItemIds.has(itemId)) return;
@@ -231,6 +284,16 @@ async function toggleItem(itemId, checked) {
   }
 }
 
+async function toggleSharedItemText(text, checked) {
+  const existing = itemByText(text);
+  if (existing) {
+    await toggleItem(existing.id, checked);
+    return;
+  }
+
+  await addSharedItemText(text, { checked });
+}
+
 async function removeItem(itemId) {
   const current = state.items.get(itemId);
   if (!current || state.pendingItemIds.has(itemId)) return;
@@ -242,6 +305,7 @@ async function removeItem(itemId) {
   try {
     const response = await deleteShoppingItem(itemId);
     state.lastSyncAt = response.shopping_item.updated_at;
+    publishSharedItems({ deletedItems: [response.shopping_item] });
   } catch {
     state.items.set(itemId, current);
     renderItems();
@@ -249,6 +313,22 @@ async function removeItem(itemId) {
   } finally {
     state.pendingItemIds.delete(itemId);
     renderItems();
+  }
+}
+
+async function importGeneratedItems(items) {
+  if (!state.listId || state.status !== "ready") return;
+
+  for (const item of items) {
+    const text = String(item?.text || "").trim();
+    if (!text || itemByText(text)) continue;
+
+    try {
+      await addSharedItemText(text, { checked: Boolean(item.checked) });
+    } catch {
+      setMessage("kunde inte dela hela inköpslistan just nu");
+      return;
+    }
   }
 }
 
@@ -287,6 +367,7 @@ async function init() {
     await loadItems();
     if (requestId !== state.initRequestId) return;
     setStatus("ready", "synkad");
+    document.dispatchEvent(new CustomEvent("ravibange:shared-shopping-ready"));
     state.pollId = window.setInterval(pollChanges, POLL_INTERVAL_MS);
   } catch (error) {
     if (requestId !== state.initRequestId) return;
@@ -304,3 +385,17 @@ document.addEventListener("ravibange:identity-changed", () => {
 });
 
 init();
+
+document.addEventListener("ravibange:generated-shopping-list-rendered", (event) => {
+  importGeneratedItems(event.detail?.items || []);
+});
+
+document.addEventListener("ravibange:generated-shopping-item-toggled", (event) => {
+  toggleSharedItemText(event.detail?.text, Boolean(event.detail?.checked)).catch(() => {
+    setMessage("kunde inte synka icheckningen just nu");
+  });
+});
+
+document.addEventListener("ravibange:generated-shopping-ui-ready", () => {
+  publishSharedItems();
+});

@@ -66,6 +66,10 @@ export function joinHousehold({ invite_code, display_name, device_key }) {
   });
 }
 
+export function getHousehold(householdId) {
+  return requestJson(`/api/households/${encodeURIComponent(householdId)}`);
+}
+
 export function getShoppingLists(householdId) {
   return requestJson(`/api/households/${encodeURIComponent(householdId)}/shopping-lists`);
 }

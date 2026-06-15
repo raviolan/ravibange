@@ -155,15 +155,21 @@ async function handleUpdateShoppingItem(request, env, itemId) {
   const body = await readJson(request);
   const text = Object.hasOwn(body || {}, "text") ? textField(body, "text") : null;
   const checked = booleanField(body, "checked");
+  const hint = Object.hasOwn(body || {}, "hint") ? textField(body, "hint") : null;
+  const section = Object.hasOwn(body || {}, "section") ? textField(body, "section") : null;
+  const alternativ = Object.hasOwn(body || {}, "alternativ") ? textField(body, "alternativ") : null;
 
-  if (text === "" || (text == null && checked == null)) {
-    return error(400, "Provide text and/or checked");
+  if (text === "" || (text == null && checked == null && hint == null && section == null && alternativ == null)) {
+    return error(400, "Provide text, checked, hint, section and/or alternativ");
   }
 
   const shopping_item = await updateShoppingItem(env.DB, {
     item_id: itemId,
     text,
     checked,
+    hint,
+    section,
+    alternativ,
   });
 
   if (!shopping_item) return notFound();

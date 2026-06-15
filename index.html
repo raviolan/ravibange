@@ -126,58 +126,62 @@
       </div>
     </section>
 
-    <section class="household-card" data-household-setup aria-label="Household setup">
+    <section class="household-card is-collapsed" data-household-setup aria-label="Household setup">
       <div class="household-card-inner">
-        <div class="household-card-header">
-          <p class="vampiro household-title">hushållet</p>
+        <button class="household-card-header" type="button" data-household-toggle aria-expanded="false">
+          <span class="vampiro household-title">hushållet</span>
+          <span class="household-sync-dot" aria-hidden="true"></span>
+        </button>
+
+        <div class="household-card-body" data-household-body>
           <p class="household-status" data-household-status></p>
-        </div>
 
-        <div data-household-setup-panel>
-          <div class="household-forms">
-            <form class="household-form" data-create-household-form>
-              <h2>Skapa hemma</h2>
-              <label>
-                <span>Ditt namn</span>
-                <input name="display-name" autocomplete="name" required>
-              </label>
-              <label>
-                <span>Hushåll</span>
-                <input name="household-name" required>
-              </label>
-              <button type="submit">skapa kod</button>
-            </form>
+          <div data-household-setup-panel>
+            <div class="household-forms">
+              <form class="household-form" data-create-household-form>
+                <h2>Skapa hemma</h2>
+                <label>
+                  <span>Ditt namn</span>
+                  <input name="display-name" autocomplete="name" required>
+                </label>
+                <label>
+                  <span>Hushåll</span>
+                  <input name="household-name" required>
+                </label>
+                <button type="submit">skapa kod</button>
+              </form>
 
-            <form class="household-form" data-join-household-form>
-              <h2>Gå med kod</h2>
-              <label>
-                <span>Ditt namn</span>
-                <input name="join-display-name" autocomplete="name" required>
-              </label>
-              <label>
-                <span>Invite code</span>
-                <input name="invite-code" autocapitalize="characters" required>
-              </label>
-              <button type="submit">gå med</button>
-            </form>
+              <form class="household-form" data-join-household-form>
+                <h2>Gå med kod</h2>
+                <label>
+                  <span>Ditt namn</span>
+                  <input name="join-display-name" autocomplete="name" required>
+                </label>
+                <label>
+                  <span>Invite code</span>
+                  <input name="invite-code" autocapitalize="characters" required>
+                </label>
+                <button type="submit">gå med</button>
+              </form>
+            </div>
           </div>
-        </div>
 
-        <div class="household-active" data-household-active-panel hidden>
-          <p class="household-name" data-household-name></p>
-          <p class="household-code">invite code <strong data-household-invite-code></strong></p>
-          <form class="household-name-form" data-display-name-form>
-            <label>
-              <span>Display name</span>
-              <input name="current-display-name" autocomplete="name" required>
-            </label>
-            <button type="submit">byt namn</button>
-          </form>
-          <button class="household-clear" type="button" data-clear-household>glöm lokalt hushåll</button>
-          <p class="household-device">device <span data-household-device></span></p>
-        </div>
+          <div class="household-active" data-household-active-panel hidden>
+            <p class="household-name" data-household-name></p>
+            <p class="household-code">invite code <strong data-household-invite-code></strong></p>
+            <form class="household-name-form" data-display-name-form>
+              <label>
+                <span>Display name</span>
+                <input name="current-display-name" autocomplete="name" required>
+              </label>
+              <button type="submit">byt namn</button>
+            </form>
+            <button class="household-clear" type="button" data-clear-household>glöm lokalt hushåll</button>
+            <p class="household-device">device <span data-household-device></span></p>
+          </div>
 
-        <p class="household-message" data-household-message aria-live="polite"></p>
+          <p class="household-message" data-household-message aria-live="polite"></p>
+        </div>
       </div>
     </section>
 

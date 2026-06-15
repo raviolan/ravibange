@@ -44,6 +44,10 @@ function itemByText(text) {
   return [...state.items.values()].find((item) => normalizeItemText(item.text) === key && !item.deleted_at) || null;
 }
 
+function itemById(itemId) {
+  return state.items.get(itemId) || null;
+}
+
 function setMessage(message) {
   const target = document.querySelector("[data-shared-shopping-message]");
   if (target) target.textContent = message;
@@ -372,6 +376,25 @@ document.addEventListener("ravibange:generated-shopping-item-toggled", (event) =
   toggleSharedItemText(event.detail?.text, Boolean(event.detail?.checked)).catch(() => {
     setMessage("kunde inte synka icheckningen just nu");
   });
+});
+
+document.addEventListener("ravibange:generated-shopping-item-metadata-updated", async (event) => {
+  const itemId = event.detail?.itemId;
+  const item = itemById(itemId);
+  if (!item) return;
+
+  try {
+    const response = await updateShoppingItem(itemId, {
+      hint: event.detail.hint || "",
+      section: event.detail.section || "",
+      alternativ: event.detail.alternativ || "",
+    });
+    mergeItems([response.shopping_item]);
+    state.lastSyncAt = response.shopping_item.updated_at;
+    setMessage("info sparad");
+  } catch {
+    setMessage("kunde inte spara info just nu");
+  }
 });
 
 document.addEventListener("ravibange:generated-shopping-list-discarded", (event) => {

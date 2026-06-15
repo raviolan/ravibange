@@ -208,7 +208,7 @@ export async function listShoppingItems(db, listId, { includeDeleted = false } =
   const items = await db
     .prepare(
       `
-        SELECT id, list_id, text, checked, created_by, created_at, updated_at, deleted_at
+        SELECT id, list_id, text, checked, created_by, hint, section, alternativ, created_at, updated_at, deleted_at
         FROM shopping_items
         WHERE list_id = ?
           AND (? OR deleted_at IS NULL)
@@ -229,6 +229,9 @@ export async function createShoppingItem(db, { list_id, text, created_by = null 
     text,
     checked: false,
     created_by,
+    hint: "",
+    section: "",
+    alternativ: "",
     created_at: timestamp,
     updated_at: timestamp,
     deleted_at: null,
@@ -238,11 +241,23 @@ export async function createShoppingItem(db, { list_id, text, created_by = null 
     db
       .prepare(
         `
-          INSERT INTO shopping_items (id, list_id, text, checked, created_by, created_at, updated_at, deleted_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO shopping_items (id, list_id, text, checked, created_by, hint, section, alternativ, created_at, updated_at, deleted_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
       )
-      .bind(item.id, item.list_id, item.text, 0, item.created_by, item.created_at, item.updated_at, item.deleted_at),
+      .bind(
+        item.id,
+        item.list_id,
+        item.text,
+        0,
+        item.created_by,
+        item.hint,
+        item.section,
+        item.alternativ,
+        item.created_at,
+        item.updated_at,
+        item.deleted_at
+      ),
     db
       .prepare(
         `
@@ -261,7 +276,7 @@ export async function getShoppingItem(db, itemId) {
   const item = await db
     .prepare(
       `
-        SELECT id, list_id, text, checked, created_by, created_at, updated_at, deleted_at
+        SELECT id, list_id, text, checked, created_by, hint, section, alternativ, created_at, updated_at, deleted_at
         FROM shopping_items
         WHERE id = ?
       `
@@ -272,7 +287,7 @@ export async function getShoppingItem(db, itemId) {
   return item ? normalizeShoppingItem(item) : null;
 }
 
-export async function updateShoppingItem(db, { item_id, text, checked }) {
+export async function updateShoppingItem(db, { item_id, text, checked, hint, section, alternativ }) {
   const current = await getShoppingItem(db, item_id);
   if (!current || current.deleted_at) return null;
 
@@ -281,6 +296,9 @@ export async function updateShoppingItem(db, { item_id, text, checked }) {
     ...current,
     text: text ?? current.text,
     checked: checked ?? current.checked,
+    hint: hint ?? current.hint,
+    section: section ?? current.section,
+    alternativ: alternativ ?? current.alternativ,
     updated_at: timestamp,
   };
 
@@ -289,11 +307,11 @@ export async function updateShoppingItem(db, { item_id, text, checked }) {
       .prepare(
         `
           UPDATE shopping_items
-          SET text = ?, checked = ?, updated_at = ?
+          SET text = ?, checked = ?, hint = ?, section = ?, alternativ = ?, updated_at = ?
           WHERE id = ? AND deleted_at IS NULL
         `
       )
-      .bind(next.text, next.checked ? 1 : 0, next.updated_at, next.id),
+      .bind(next.text, next.checked ? 1 : 0, next.hint, next.section, next.alternativ, next.updated_at, next.id),
     db
       .prepare(
         `
@@ -365,6 +383,9 @@ export async function getHouseholdChanges(db, { household_id, since }) {
                shopping_items.text,
                shopping_items.checked,
                shopping_items.created_by,
+               shopping_items.hint,
+               shopping_items.section,
+               shopping_items.alternativ,
                shopping_items.created_at,
                shopping_items.updated_at,
                shopping_items.deleted_at

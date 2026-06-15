@@ -1,4 +1,4 @@
-const CACHE_NAME = "ravibange-pwa-v7";
+const CACHE_NAME = "ravibange-pwa-v10";
 
 const APP_SHELL = [
   "./",

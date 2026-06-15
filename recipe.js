@@ -17,6 +17,8 @@ const state = {
   recipeMap: new Map(),
   storeRanks: {},
   majsroraItems: [],
+  sectionNames: [],
+  ingredientRecipeNames: new Map(),
 };
 
 const CACHE_KEY = "ravibange_spreadsheet_cache_v2";
@@ -212,12 +214,23 @@ function displayIngredientName(ingredient) {
   return `${ingredient.name} x ${formatAmount(amount)}`;
 }
 
+function ingredientOriginKey(value) {
+  return normalizeText(String(value || "").replace(/\s+x\s+\d+$/i, ""));
+}
+
+function displayRecipeName(value) {
+  return String(value || "")
+    .replace(/-/g, " ")
+    .trim();
+}
+
 function parseRecipeSheet(rows) {
   const recipeMap = new Map();
   const generalItems = [];
   const majsroraItems = [];
   const records = [];
   const allRecipeSlugs = new Set();
+  const ingredientRecipeNames = new Map();
 
   for (const row of rows.slice(1)) {
     const [recipesRaw, ingredientRaw, hintRaw, sectionRaw, notesRaw, alternativRaw, amountRaw = ""] = row;
@@ -264,6 +277,12 @@ function parseRecipeSheet(rows) {
 
       allRecipeSlugs.add(slug);
       targets.push(slug);
+
+      const originKey = ingredientOriginKey(item.name);
+      if (!ingredientRecipeNames.has(originKey)) {
+        ingredientRecipeNames.set(originKey, new Set());
+      }
+      ingredientRecipeNames.get(originKey).add(displayRecipeName(recipeName));
     }
 
     records.push({
@@ -287,6 +306,7 @@ function parseRecipeSheet(rows) {
   return {
     recipeMap,
     majsroraItems: dedupeItems(majsroraItems),
+    ingredientRecipeNames,
   };
 }
 
@@ -388,6 +408,50 @@ function metaEntry(label, value) {
   return fragment;
 }
 
+function renderIngredientMeta(meta, ingredient, row) {
+  meta.replaceChildren();
+
+  if (ingredient.hint) {
+    meta.append(metaEntry("Hint:", ingredient.hint));
+  }
+
+  if (ingredient.section) {
+    meta.append(metaEntry("Avdelning:", ingredient.section));
+  }
+
+  if (ingredient.alternativ) {
+    meta.append(metaEntry("Alternativ:", ingredient.alternativ));
+  }
+
+  const origin = foundInText(ingredient, row);
+  if (origin) {
+    meta.append(metaEntry("found in:", origin));
+  }
+
+  if (ingredient.sharedItem) {
+    const editButton = document.createElement("button");
+    editButton.className = "shared-item-edit";
+    editButton.type = "button";
+    editButton.textContent = "ändra info";
+    editButton.addEventListener("click", () => openSharedItemEditor(row, ingredient));
+    meta.append(editButton);
+  }
+}
+
+function foundInText(ingredient, row) {
+  if (ingredient.sharedItem || row?.dataset.sharedItem === "true") {
+    return "manuellt inmatad";
+  }
+
+  const names = recipeNamesForIngredient(ingredient.name);
+  return names.length ? names.join(", ") : "";
+}
+
+function recipeNamesForIngredient(name) {
+  return [...(state.ingredientRecipeNames.get(ingredientOriginKey(name)) || [])]
+    .sort((a, b) => a.localeCompare(b, "sv"));
+}
+
 function renderIngredientList(ingredients, storageKey) {
   const ul = document.createElement("ul");
   ul.className = "ingredients-list ingredient-items";
@@ -425,17 +489,7 @@ function renderIngredientList(ingredients, storageKey) {
     meta.className = "ingredient-meta";
     meta.hidden = true;
 
-    if (ingredient.hint) {
-      meta.append(metaEntry("Hint:", ingredient.hint));
-    }
-
-    if (ingredient.section) {
-      meta.append(metaEntry("Avdelning:", ingredient.section));
-    }
-
-    if (ingredient.alternativ) {
-      meta.append(metaEntry("Alternativ:", ingredient.alternativ));
-    }
+    renderIngredientMeta(meta, ingredient, row);
 
     toggle.addEventListener("click", () => {
       const open = toggle.getAttribute("aria-expanded") === "true";
@@ -460,6 +514,98 @@ function renderIngredientList(ingredients, storageKey) {
   });
 
   return ul;
+}
+
+function sharedItemFromRow(row) {
+  return {
+    name: rowGeneratedItemText(row),
+    hint: row.dataset.hint || "",
+    section: row.dataset.section || "",
+    notes: row.dataset.notes || "",
+    alternativ: row.dataset.alternativ || "",
+    sharedItem: row.dataset.sharedItem === "true",
+  };
+}
+
+function availableSectionNames() {
+  const sections = new Set(state.sectionNames);
+  document.querySelectorAll(".ingredient-row[data-section]").forEach((row) => {
+    if (row.dataset.section) sections.add(row.dataset.section);
+  });
+  return [...sections].filter(Boolean).sort((a, b) => a.localeCompare(b, "sv"));
+}
+
+function openSharedItemEditor(row, ingredient) {
+  const existing = row.querySelector(".shared-item-editor");
+  if (existing) {
+    existing.remove();
+    return;
+  }
+
+  const meta = row.querySelector(".ingredient-meta");
+  if (!meta) return;
+
+  const form = document.createElement("form");
+  form.className = "shared-item-editor";
+  form.innerHTML = `
+    <label>
+      <span>Hint</span>
+      <input name="hint" value="${escapeHtml(ingredient.hint || "")}">
+    </label>
+    <label>
+      <span>Avdelning</span>
+      <select name="section">
+        <option value="">Ingen avdelning</option>
+        ${availableSectionNames().map((section) => `
+          <option value="${escapeHtml(section)}"${section === ingredient.section ? " selected" : ""}>${escapeHtml(section)}</option>
+        `).join("")}
+      </select>
+    </label>
+    <label>
+      <span>Alternativ</span>
+      <input name="alternativ" value="${escapeHtml(ingredient.alternativ || "")}">
+    </label>
+    <button type="submit">spara</button>
+  `;
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    updateSharedItemMetadata(row, {
+      hint: String(data.get("hint") || "").trim(),
+      section: String(data.get("section") || "").trim(),
+      alternativ: String(data.get("alternativ") || "").trim(),
+    });
+  });
+
+  meta.append(form);
+}
+
+function updateSharedItemMetadata(row, metadata) {
+  row.dataset.hint = metadata.hint;
+  row.dataset.section = metadata.section;
+  row.dataset.alternativ = metadata.alternativ;
+
+  const ingredient = sharedItemFromRow(row);
+  const meta = row.querySelector(".ingredient-meta");
+  if (meta) renderIngredientMeta(meta, ingredient, row);
+
+  refreshVisibleIngredientOrder();
+
+  document.dispatchEvent(new CustomEvent("ravibange:generated-shopping-item-metadata-updated", {
+    detail: {
+      itemId: row.dataset.sharedItemId,
+      ...metadata,
+    },
+  }));
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function normalizedGeneratedItemText(value) {
@@ -529,6 +675,9 @@ function applySharedShoppingItems(items) {
     const existingRow = rowsByText.get(key);
     if (existingRow) {
       existingRow.dataset.sharedItemId = item.id;
+      if (existingRow.dataset.sharedItem === "true") {
+        applySharedRowMetadata(existingRow, item);
+      }
       syncGeneratedRowChecked(existingRow, Boolean(item.checked));
       continue;
     }
@@ -537,11 +686,12 @@ function applySharedShoppingItems(items) {
     const rendered = renderIngredientList([
       {
         name: text,
-        hint: "Delad lista",
-        section: "",
+        hint: item.hint || "",
+        section: item.section || "",
         notes: "",
-        alternativ: "",
+        alternativ: item.alternativ || "",
         totalAmount: null,
+        sharedItem: true,
       },
     ], storageKey);
     const row = rendered.querySelector(".ingredient-row");
@@ -549,10 +699,20 @@ function applySharedShoppingItems(items) {
 
     row.dataset.sharedItem = "true";
     row.dataset.sharedItemId = item.id;
+    applySharedRowMetadata(row, item);
     syncGeneratedRowChecked(row, Boolean(item.checked));
     list.append(row);
     rowsByText.set(key, row);
   }
+}
+
+function applySharedRowMetadata(row, item) {
+  row.dataset.hint = item.hint || "";
+  row.dataset.section = item.section || "";
+  row.dataset.alternativ = item.alternativ || "";
+
+  const meta = row.querySelector(".ingredient-meta");
+  if (meta) renderIngredientMeta(meta, sharedItemFromRow(row), row);
 }
 
 function createSharedGeneratedShoppingList(items) {
@@ -1009,10 +1169,21 @@ function applySpreadsheetData(recipeRows, butikRows, { source }) {
   const parsedRecipe = parseRecipeSheet(recipeRows);
   state.recipeMap = parsedRecipe.recipeMap;
   state.majsroraItems = parsedRecipe.majsroraItems;
+  state.ingredientRecipeNames = parsedRecipe.ingredientRecipeNames;
   state.storeRanks = parseButikSheet(butikRows);
+  state.sectionNames = collectSectionNames(recipeRows);
 
   renderCurrentRecipePage(source);
   renderIndexPage();
+}
+
+function collectSectionNames(rows) {
+  const sections = new Set();
+  for (const row of rows.slice(1)) {
+    const section = displayTag(row[3]);
+    if (section) sections.add(section);
+  }
+  return [...sections];
 }
 
 function renderCurrentRecipePage(source = "live") {

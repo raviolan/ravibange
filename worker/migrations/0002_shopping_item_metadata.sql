@@ -1,0 +1,3 @@
+ALTER TABLE shopping_items ADD COLUMN hint TEXT NOT NULL DEFAULT '';
+ALTER TABLE shopping_items ADD COLUMN section TEXT NOT NULL DEFAULT '';
+ALTER TABLE shopping_items ADD COLUMN alternativ TEXT NOT NULL DEFAULT '';

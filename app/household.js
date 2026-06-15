@@ -1,4 +1,4 @@
-import { ApiError, createHousehold, joinHousehold } from "./api.js";
+import { ApiError, createHousehold, getHousehold, joinHousehold } from "./api.js";
 import {
   clearIdentity,
   createLocalHousehold,
@@ -9,6 +9,7 @@ import {
 } from "./identity.js";
 
 const householdRoot = document.querySelector("[data-household-setup]");
+let syncCheckId = 0;
 
 function valueFrom(form, name) {
   return new FormData(form).get(name)?.toString().trim() || "";
@@ -25,6 +26,7 @@ function renderIdentity(identity) {
   const inviteCode = householdRoot.querySelector("[data-household-invite-code]");
   const householdName = householdRoot.querySelector("[data-household-name]");
   const deviceKey = householdRoot.querySelector("[data-household-device]");
+  const toggle = householdRoot.querySelector("[data-household-toggle]");
 
   if (status) {
     status.textContent = hasHousehold
@@ -38,10 +40,37 @@ function renderIdentity(identity) {
   if (inviteCode) inviteCode.textContent = identity.inviteCode || "";
   if (householdName) householdName.textContent = identity.householdName || "Local household";
   if (deviceKey) deviceKey.textContent = identity.device_key || "";
+  if (toggle) toggle.setAttribute("aria-label", hasHousehold ? "Visa hushållet" : "Skapa hushåll");
+
+  checkHouseholdSync(identity);
 
   document.dispatchEvent(new CustomEvent("ravibange:identity-changed", {
     detail: identity,
   }));
+}
+
+function setSyncState(state) {
+  if (!householdRoot) return;
+  householdRoot.dataset.syncState = state;
+}
+
+async function checkHouseholdSync(identity) {
+  const checkId = syncCheckId + 1;
+  syncCheckId = checkId;
+
+  if (!identity.householdId || identity.householdId.startsWith("local_")) {
+    setSyncState("offline");
+    return;
+  }
+
+  setSyncState("connecting");
+
+  try {
+    await getHousehold(identity.householdId);
+    if (checkId === syncCheckId) setSyncState("synced");
+  } catch {
+    if (checkId === syncCheckId) setSyncState("offline");
+  }
 }
 
 function showMessage(message) {
@@ -72,6 +101,11 @@ function isUnavailable(error) {
 
 function bindHouseholdForms() {
   if (!householdRoot) return;
+
+  householdRoot.querySelector("[data-household-toggle]")?.addEventListener("click", () => {
+    const isCollapsed = householdRoot.classList.toggle("is-collapsed");
+    householdRoot.querySelector("[data-household-toggle]")?.setAttribute("aria-expanded", String(!isCollapsed));
+  });
 
   householdRoot.querySelector("[data-create-household-form]")?.addEventListener("submit", async (event) => {
     event.preventDefault();

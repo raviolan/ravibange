@@ -188,6 +188,7 @@ async function addItem(event) {
     const response = await createShoppingItem(state.listId, {
       text,
       created_by: state.identity.userId || null,
+      found_in: "manuellt inmatad",
     });
     input.value = "";
     mergeItems([response.shopping_item]);
@@ -201,12 +202,18 @@ async function addItem(event) {
   }
 }
 
-async function addSharedItemText(text, { checked = false } = {}) {
+async function addSharedItemText(text, { checked = false, found_in = "" } = {}) {
   const cleanText = String(text || "").trim();
   if (!cleanText || !state.listId) return null;
 
   const existing = itemByText(cleanText);
   if (existing) {
+    if (found_in && existing.found_in !== found_in) {
+      const response = await updateShoppingItem(existing.id, { found_in });
+      mergeItems([response.shopping_item]);
+      state.lastSyncAt = response.shopping_item.updated_at;
+    }
+
     if (existing.checked !== checked) {
       return toggleItem(existing.id, checked);
     }
@@ -216,6 +223,7 @@ async function addSharedItemText(text, { checked = false } = {}) {
   const response = await createShoppingItem(state.listId, {
     text: cleanText,
     created_by: state.identity?.userId || null,
+    found_in,
   });
   mergeItems([response.shopping_item]);
   state.lastSyncAt = response.shopping_item.updated_at;
@@ -308,7 +316,10 @@ async function importGeneratedItems(items) {
     if (!text || itemByText(text)) continue;
 
     try {
-      await addSharedItemText(text, { checked: Boolean(item.checked) });
+      await addSharedItemText(text, {
+        checked: Boolean(item.checked),
+        found_in: item.found_in || "manuellt inmatad",
+      });
     } catch {
       setMessage("kunde inte dela hela inköpslistan just nu");
       return;

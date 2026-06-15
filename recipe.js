@@ -439,12 +439,18 @@ function renderIngredientMeta(meta, ingredient, row) {
 }
 
 function foundInText(ingredient, row) {
+  if (ingredient.foundIn || row?.dataset.foundIn) {
+    return ingredient.foundIn || row.dataset.foundIn;
+  }
+
+  const names = recipeNamesForIngredient(ingredient.name);
+  if (names.length) return names.join(", ");
+
   if (ingredient.sharedItem || row?.dataset.sharedItem === "true") {
     return "manuellt inmatad";
   }
 
-  const names = recipeNamesForIngredient(ingredient.name);
-  return names.length ? names.join(", ") : "";
+  return "";
 }
 
 function recipeNamesForIngredient(name) {
@@ -523,6 +529,7 @@ function sharedItemFromRow(row) {
     section: row.dataset.section || "",
     notes: row.dataset.notes || "",
     alternativ: row.dataset.alternativ || "",
+    foundIn: row.dataset.foundIn || "",
     sharedItem: row.dataset.sharedItem === "true",
   };
 }
@@ -633,6 +640,7 @@ function generatedShoppingItems() {
     .map((row) => ({
       text: rowGeneratedItemText(row),
       checked: row.querySelector(".ingredient-check")?.checked || false,
+      found_in: foundInText(sharedItemFromRow(row), row),
     }))
     .filter((item) => item.text);
 }
@@ -690,6 +698,7 @@ function applySharedShoppingItems(items) {
         section: item.section || "",
         notes: "",
         alternativ: item.alternativ || "",
+        foundIn: item.found_in || "",
         totalAmount: null,
         sharedItem: true,
       },
@@ -710,6 +719,7 @@ function applySharedRowMetadata(row, item) {
   row.dataset.hint = item.hint || "";
   row.dataset.section = item.section || "";
   row.dataset.alternativ = item.alternativ || "";
+  row.dataset.foundIn = item.found_in || "";
 
   if (row.querySelector(".shared-item-editor")) return;
 

@@ -146,6 +146,7 @@ async function handleCreateShoppingItem(request, env, listId) {
     list_id: listId,
     text: textField(body, "text"),
     created_by: textField(body, "created_by") || textField(body, "userId") || null,
+    found_in: textField(body, "found_in"),
   });
 
   return json({ shopping_item }, { status: 201 });
@@ -158,9 +159,10 @@ async function handleUpdateShoppingItem(request, env, itemId) {
   const hint = Object.hasOwn(body || {}, "hint") ? textField(body, "hint") : null;
   const section = Object.hasOwn(body || {}, "section") ? textField(body, "section") : null;
   const alternativ = Object.hasOwn(body || {}, "alternativ") ? textField(body, "alternativ") : null;
+  const found_in = Object.hasOwn(body || {}, "found_in") ? textField(body, "found_in") : null;
 
-  if (text === "" || (text == null && checked == null && hint == null && section == null && alternativ == null)) {
-    return error(400, "Provide text, checked, hint, section and/or alternativ");
+  if (text === "" || (text == null && checked == null && hint == null && section == null && alternativ == null && found_in == null)) {
+    return error(400, "Provide text, checked, hint, section, alternativ and/or found_in");
   }
 
   const shopping_item = await updateShoppingItem(env.DB, {
@@ -170,6 +172,7 @@ async function handleUpdateShoppingItem(request, env, itemId) {
     hint,
     section,
     alternativ,
+    found_in,
   });
 
   if (!shopping_item) return notFound();

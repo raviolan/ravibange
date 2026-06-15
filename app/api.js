@@ -85,10 +85,10 @@ export function getShoppingItems(listId) {
   return requestJson(`/api/shopping-lists/${encodeURIComponent(listId)}/items`);
 }
 
-export function createShoppingItem(listId, { text, created_by }) {
+export function createShoppingItem(listId, { text, created_by, found_in }) {
   return requestJson(`/api/shopping-lists/${encodeURIComponent(listId)}/items`, {
     method: "POST",
-    body: JSON.stringify({ text, created_by }),
+    body: JSON.stringify({ text, created_by, found_in }),
   });
 }
 

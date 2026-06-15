@@ -364,6 +364,39 @@ export async function softDeleteShoppingItem(db, itemId) {
   return item;
 }
 
+export async function softDeleteShoppingItemsByList(db, listId) {
+  const activeItems = await listShoppingItems(db, listId);
+  if (!activeItems.length) return [];
+
+  const timestamp = now();
+  await db.batch([
+    db
+      .prepare(
+        `
+          UPDATE shopping_items
+          SET updated_at = ?, deleted_at = ?
+          WHERE list_id = ? AND deleted_at IS NULL
+        `
+      )
+      .bind(timestamp, timestamp, listId),
+    db
+      .prepare(
+        `
+          UPDATE shopping_lists
+          SET updated_at = ?
+          WHERE id = ?
+        `
+      )
+      .bind(timestamp, listId),
+  ]);
+
+  return activeItems.map((item) => ({
+    ...item,
+    updated_at: timestamp,
+    deleted_at: timestamp,
+  }));
+}
+
 export async function getHouseholdChanges(db, { household_id, since }) {
   const lists = await db
     .prepare(

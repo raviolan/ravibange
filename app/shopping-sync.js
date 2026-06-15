@@ -1,5 +1,6 @@
 import {
   ApiError,
+  clearShoppingListItems,
   createShoppingItem,
   createShoppingList,
   deleteShoppingItem,
@@ -320,6 +321,27 @@ async function deleteGeneratedItems(items) {
   }
 }
 
+async function clearSharedShoppingList(items) {
+  if (!state.listId || state.status !== "ready") return;
+
+  try {
+    const response = await clearShoppingListItems(state.listId);
+    const deletedItems = response.shopping_items || [];
+    state.items.clear();
+    state.lastSyncAt = response.shopping_list?.updated_at || response.server_time || new Date().toISOString();
+    publishSharedItems({ deletedItems });
+    setMessage("listan tömd");
+    return;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 0) {
+      setMessage("kunde inte tömma listan just nu");
+      return;
+    }
+  }
+
+  await deleteGeneratedItems(items);
+}
+
 async function importGeneratedItems(items) {
   if (!state.listId || state.status !== "ready") return;
 
@@ -424,7 +446,7 @@ document.addEventListener("ravibange:generated-shopping-item-metadata-updated", 
 });
 
 document.addEventListener("ravibange:generated-shopping-list-discarded", (event) => {
-  deleteGeneratedItems(event.detail?.items || []);
+  clearSharedShoppingList(event.detail?.items || []);
 });
 
 document.addEventListener("ravibange:generated-shopping-ui-ready", () => {

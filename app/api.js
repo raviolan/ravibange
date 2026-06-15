@@ -92,6 +92,12 @@ export function createShoppingItem(listId, { text, created_by, found_in }) {
   });
 }
 
+export function clearShoppingListItems(listId) {
+  return requestJson(`/api/shopping-lists/${encodeURIComponent(listId)}/items`, {
+    method: "DELETE",
+  });
+}
+
 export function updateShoppingItem(itemId, updates) {
   return requestJson(`/api/shopping-items/${encodeURIComponent(itemId)}`, {
     method: "PATCH",

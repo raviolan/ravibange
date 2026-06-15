@@ -9,6 +9,7 @@ import {
   listShoppingItems,
   listShoppingLists,
   softDeleteShoppingItem,
+  softDeleteShoppingItemsByList,
   updateShoppingItem,
 } from "./db.js";
 import { error, json, notFound, preflight } from "./responses.js";
@@ -134,6 +135,14 @@ async function handleListShoppingItems(env, listId) {
   return json({ shopping_list: list, shopping_items });
 }
 
+async function handleClearShoppingItems(env, listId) {
+  const list = await getShoppingList(env.DB, listId);
+  if (!list) return notFound();
+
+  const shopping_items = await softDeleteShoppingItemsByList(env.DB, listId);
+  return json({ shopping_list: list, shopping_items });
+}
+
 async function handleCreateShoppingItem(request, env, listId) {
   const body = await readJson(request);
   const missing = requireFields(body, ["text"]);
@@ -250,6 +259,10 @@ async function handleRequest(request, env) {
 
     if (request.method === "POST") {
       return handleCreateShoppingItem(request, env, shoppingItemsRoute.listId);
+    }
+
+    if (request.method === "DELETE") {
+      return handleClearShoppingItems(env, shoppingItemsRoute.listId);
     }
   }
 

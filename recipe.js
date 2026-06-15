@@ -711,6 +711,8 @@ function applySharedRowMetadata(row, item) {
   row.dataset.section = item.section || "";
   row.dataset.alternativ = item.alternativ || "";
 
+  if (row.querySelector(".shared-item-editor")) return;
+
   const meta = row.querySelector(".ingredient-meta");
   if (meta) renderIngredientMeta(meta, sharedItemFromRow(row), row);
 }
